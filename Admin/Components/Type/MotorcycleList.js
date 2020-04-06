@@ -1,9 +1,10 @@
-import React,{useState,useEffect,useCallback} from 'react'
-import { View,FlatList, ActivityIndicator } from 'react-native'
-import { Container, Header,  List, Item, Input, Icon, Button, ListItem, Left, Body, Right, Thumbnail, Text } from 'native-base';
+import React,{useState,useCallback} from 'react'
+import { FlatList,SafeAreaView } from 'react-native'
+import { Container, Header,  List, Item, Input, Button, ListItem, Left, Body, Right, Thumbnail, Text } from 'native-base';
 import axios from 'axios'
-import _ from 'lodash'
 import { useFocusEffect } from 'react-navigation-hooks'
+import {handleSearch} from './Components/Functions/MotorcycleList'
+import styles from './Components/Styles/MotorcycleList'
 
 const MotorcycleList = ({navigation}) => {
     const [data,setData] = useState([]);
@@ -42,7 +43,7 @@ const MotorcycleList = ({navigation}) => {
                         <Text note>{item.year}</Text>
                     </Body>
                     <Right>
-                        <Button style = {{backgroundColor : '#61c0bf',borderRadius : 5}}  onPress = {() => navigation.navigate('MotorcycleDetail',item)}>
+                        <Button style = {styles.button_detail}  onPress = {() => navigation.navigate('MotorcycleDetail',item)}>
                         <Text>Detail</Text>
                         </Button>
                     </Right>
@@ -50,35 +51,23 @@ const MotorcycleList = ({navigation}) => {
             </List>
         )
     }
-    
-    const handleSearch = (text) => {
-        const formattedQuery = text.toLowerCase();
-        const data = _.filter(fullData,list => {
-            if(list.name.toLowerCase().includes(formattedQuery)){
-                return true
-            }
-            return false
-        })
-        setData(data)
-    }
 
     return (
         <Container>
-            <Header searchBar style = {{backgroundColor : '#61c0bf'}}>
-                <Item style = {{borderRadius : 5}}>
-                    <Input placeholder="Cari Tipe Kereta" onChangeText = {handleSearch}/>
+            <Header searchBar style = {styles.header_searchbar}>
+                <Item style = {styles.column_searchbox}>
+                    <Input placeholder="Cari Tipe Kereta" onChangeText = {(text) => handleSearch(text,fullData,setData)}/>
                 </Item>
             </Header>
-            <List>
+            <SafeAreaView style = {{flex : 1}}>
                 <FlatList
-                    keyExtractor={(item, index) => item._id}
                     data = {data}
                     renderItem = {_renderItem}
                     keyExtractor = {(item,index) => index.toString()}
                 />
-            </List>
+            </SafeAreaView>
 
-            <Button rounded style = {{position : 'absolute',bottom : 20,left : 20,backgroundColor : '#71c9ce'}} onPress = {() => navigation.navigate('MotorcycleForm')}>
+            <Button rounded style = {styles.button_add_motorcycle} onPress = {() => navigation.navigate('MotorcycleForm')}>
                 <Text>Tambah Kereta</Text>
             </Button>
         </Container>

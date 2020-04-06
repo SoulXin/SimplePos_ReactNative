@@ -66,3 +66,16 @@ exports.detail_product = (req,res) => {
         res.json(error)
     })
 }
+
+exports.update_qty = (req,res) => {
+    var id = req.params.id;
+    Product.findByIdAndUpdate(id,{
+        qty : req.body.qty
+    })
+    .then(response => {
+        res.json(response)
+    })
+    .catch(error => {
+        res.json(error)
+    })
+}

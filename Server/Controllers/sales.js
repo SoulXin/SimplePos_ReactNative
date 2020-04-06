@@ -1,41 +1,6 @@
 const Sales = require('../Models/sales')
 
 exports.add_sales = (req,res) => {
-    // let date_invoice = req.body.date_order;
-    // Sales.find({
-    //     date_order : date_invoice
-
-    // })
-    // .then(response => {
-    //     if(response.length){
-    //         const order = response[0].order;
-    //         order.push(req.body.order);
-    //         Sales.updateOne({date_order : date_invoice},{
-    //             date_order : date_invoice,
-    //             order : order
-    //         },{new: true})
-    //         .then(response => {
-    //             res.json(response)
-    //         })
-    //         .catch(error => {
-    //             res.json(error)
-    //         })
-    //     }else{
-    //         Sales.create({
-    //             date_order : req.body.date_order,
-    //             order : req.body.order
-    //         })
-    //         .then(response => {
-    //             res.json(response)
-    //         })
-    //         .catch(error => {
-    //             res.json(error)
-    //         })
-    //     }
-    // })
-    // .catch(error => {   
-    //     res.json(error);
-    // })
     Sales.create({
         date_order : req.body.date_order,
         order : req.body.order
@@ -103,7 +68,8 @@ exports.show_sales = (req,res) => {
                         list_order_daily : "$list_order_daily"
                     }
                 }
-            }}
+            }},
+            {$sort : {_id : 1}}
            
         ])
         .then(response => {

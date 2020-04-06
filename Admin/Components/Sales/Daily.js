@@ -1,9 +1,11 @@
 import React,{useState,useCallback} from 'react'
-import { View,FlatList, ActivityIndicator,Modal,ScrollView,TouchableOpacity,TextInput, Alert} from 'react-native'
-import { Container, Header,  List, Item, Input, Icon, Button, ListItem, Left, Body, Right, Thumbnail, Text } from 'native-base';
+import { View,FlatList,Modal,ScrollView,TouchableOpacity } from 'react-native'
+import { List, Button, ListItem, Body, Right, Text } from 'native-base';
 import axios from 'axios'
 import { useFocusEffect } from 'react-navigation-hooks'
-import {formatMoney,date} from './Components/Functions'
+import {formatMoney,date} from '../../Global_Functions/Functions'
+import { handleDetail,handleCloseModalDetail} from './Components/Functions/Daily'
+import styles from './Components/Styles/Daily'
 
 const Index = () => {
     const [data,setData] = useState([]);
@@ -30,36 +32,26 @@ const Index = () => {
         }
     },[]));
 
-    const handleDetail = (item) => {
-        setShowModalDetail(true);
-        setDetailData(item);
-    }
-
     const viewOrder = () => detailData ? detailData.product.map((list,index) => {
         return (
-            <View style = {{flexDirection : 'row',alignItems : 'center',margin : 5,padding : 10,borderRadius : 7,borderWidth : 1}} key = {index}>
-                <Text style = {{flex : 1,textAlign : 'center'}}>{list.product_name}</Text>
-                <Text style = {{flex : 1,textAlign : 'center'}}>{list.qty}</Text>
-                <Text style = {{flex : 1,textAlign : 'center'}}>{list.product_price}</Text>
-                <Text style = {{flex : 1,textAlign : 'center'}}>{list.product_price * list.qty}</Text>
+            <View style = {styles.row_child} key = {index}>
+                <Text style = {styles.table_cell_2}>{list.product_name}</Text>
+                <Text style = {styles.table_cell_1}>{list.qty}</Text>
+                <Text style = {styles.table_cell_2}>Rp.{formatMoney(list.product_price)}</Text>
+                <Text style = {styles.table_cell_2}>Rp.{formatMoney(list.product_price * list.qty)}</Text>
             </View>
         )
     }) : null
 
-    const handleCloseModalDetail = () => {
-        setDetailData('');
-        setShowModalDetail(false);
-    }
     const _renderItem = ({item,index }) => {
         return (
             <ListItem avatar>
                 <Body>
                     <Text style = {{fontSize : 14}}>{item.order.bk}</Text>
-                    <Text  style = {{fontWeight : 'bold',fontSize : 20}}>Rp. {formatMoney(item.order.total)}</Text>
-                    {/* <Text note>Jual     :  Rp. {formatMoney(item.product_price)}</Text> */}
+                    <Text  style = {styles.main_title}>Rp. {formatMoney(item.order.total)}</Text>
                 </Body>
                 <Right>
-                    <Button style = {{backgroundColor : '#61c0bf',borderRadius : 5,marginTop : 8}} onPress = {() =>handleDetail(item.order)}>
+                    <Button style = {styles.button_detail} onPress = {() =>handleDetail(item.order,setShowModalDetail,setDetailData)}>
                         <Text>Detail</Text>
                     </Button>
                 </Right>
@@ -68,61 +60,64 @@ const Index = () => {
     }
 
     return (
-        <View style = {{flex : 1,margin : 10}}>
+        <View style = {styles.container}>
             <Modal visible = {showModalDetail}>
-                <View style = {{flex : 1,margin : 10}}>
-                    <View style = {{flexDirection : 'row',padding : 10,borderRadius : 7,backgroundColor : '#e3fdfd'}}>
+                <View style = {styles.container_modal}>
+                    <View style = {styles.container_box_modal_detail}>
                         <View style = {{flex : 2}}>
-                            <View style = {{flexDirection : 'row'}}>
-                                <Text style = {{flex : 1}}>BK</Text>
+                            <View style = {styles.row}>
+                                <Text style = {styles.cell}>BK</Text>
                                 <Text> : </Text>
-                                <Text style = {{flex : 1}}>{detailData.bk}</Text>
+                                <Text style = {styles.cell}>{detailData.bk}</Text>
                             </View>
-                            <View style = {{flexDirection : 'row'}}>
-                                <Text style = {{flex : 1}}>Mekanik</Text>
+                            <View style = {styles.row}>
+                                <Text style = {styles.cell}>Mekanik</Text>
                                 <Text> : </Text>
-                                <Text style = {{flex : 1}}>{detailData.mechanic}</Text>
+                                <Text style = {styles.cell}>{detailData.mechanic}</Text>
                             </View>
-                            <View style = {{flexDirection : 'row'}}>
-                                <Text style = {{flex : 1}}>Total</Text>
+                            <View style = {styles.row}>
+                                <Text style = {styles.cell}>Total</Text>
                                 <Text> : </Text>
-                                <Text style = {{flex : 1}}>{formatMoney(detailData.total)}</Text>
+                                <Text style = {styles.cell}>{formatMoney(detailData.total)}</Text>
                             </View>
                         </View>
 
-                        <View style = {{flex : 1}}>
+                        <View style = {styles.cell}>
                             <Text style = {{justifyContent : 'flex-end'}}></Text>
                         </View>
                     </View>
 
-                    {/* List */}
-                    <View style = {{flexDirection : 'row',alignItems : 'center',marginTop : 5,marginBottom : 5, padding : 10,borderRadius : 7,backgroundColor : '#e3fdfd'}}>
-                        <Text style = {{flex : 1,textAlign : 'center'}}>Nama Produk</Text>
-                        <Text style = {{flex : 1,textAlign : 'center'}}>Jumlah</Text>
-                        <Text style = {{flex : 1,textAlign : 'center'}}>Harga</Text>
-                        <Text style = {{flex : 1,textAlign : 'center'}}>Total</Text>
+                    {/* Table Header */}
+                    <View style = {styles.table_header}>
+                        <Text style = {styles.table_cell_2}>Nama Produk</Text>
+                        <Text style = {styles.table_cell_1}>Qty</Text>
+                        <Text style = {styles.table_cell_2}>Harga</Text>
+                        <Text style = {styles.table_cell_2}>Total</Text>
                     </View>
-                    <View style = {{height : 385}}>
+
+                    {/* List */}
+                    <View style = {{flex : 7}}>
                         <ScrollView>
                             {viewOrder()}
                         </ScrollView>
                     </View>
-                    <View style = {{position : 'absolute',bottom : 0,width : '100%'}}>
-                        <TouchableOpacity style = {{backgroundColor : '#61c0bf',padding : 10,margin : 10,borderRadius : 5}} onPress = {handleCloseModalDetail}>
+                    
+                    {/* Button */}
+                    <View style = {styles.container_button}>
+                        <TouchableOpacity style = {styles.button_ok} onPress = {() => handleCloseModalDetail(setDetailData,setShowModalDetail)}>
                             <Text style = {{textAlign : 'center'}}>OK</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
             </Modal>
             <List>
-                {
-                    data.length ? 
-                    <View style = {{flexDirection : 'row',borderBottomWidth : 1,paddingBottom : 10,paddingTop : 10}}>
-                        <Text style = {{flex : 1}}>{date(data[0].date_order)}</Text>
-                        <Text style = {{flex : 1,textAlign : 'right'}}>{data[0].order.length}</Text>
-                    </View> : null
+                {   data.length ? 
+                    <View  style = {styles.top_header_invoice}>
+                        <Text>Tanggal : {date(data[0].date_order)}</Text>
+                        <Text style = {styles.main_title}>Penjualan Harian</Text>
+                    </View>
+                     : null
                 }
-                
                 <FlatList
                     keyExtractor={(item, index) => index.toString()}
                     data = {data}

@@ -7,7 +7,8 @@ import ProductStack from './ProductStack'
 import InventoryStack from './InventoryStack'
 import SalesStack from './SalesStack'
 import MotorcycleStack from './MotorcycleStack'
-import EmployeeStack from './EmployeeStack'
+import MechanicStack from './MechanicStack'
+import IncomeStack from './IncomeStack'
 import {SafeAreaView,ScrollView,Image,View} from 'react-native'
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
@@ -60,11 +61,20 @@ const RootDrawerNavigator = createDrawerNavigator({
         }
     },
     Mekanik : {
-        screen : EmployeeStack,
+        screen : MechanicStack,
         navigationOptions : {
             title : 'Mekanik',
             drawerIcon : () => (
-                <Icon name="account" style = {{fontSize : 24,color : '#61c0bf'}}/>
+                <Icon name="account-tie" style = {{fontSize : 24,color : '#61c0bf'}}/>
+            )
+        }
+    },
+    Persediaan : {
+        screen : InventoryStack,
+        navigationOptions : {
+            title : 'Re-Stok Produk',
+            drawerIcon : () => (
+                <Icon name="playlist-check" style = {{fontSize : 24,color : '#61c0bf'}}/>
             )
         }
     },
@@ -77,15 +87,15 @@ const RootDrawerNavigator = createDrawerNavigator({
             )
         }
     },
-    Persediaan : {
-        screen : InventoryStack,
+    Pendapatan : {
+        screen : IncomeStack,
         navigationOptions : {
-            title : 'Re-Stok Produk',
+            title : 'Pendapatan',
             drawerIcon : () => (
-                <Icon name="playlist-check" style = {{fontSize : 24,color : '#61c0bf'}}/>
+                <Icon name="cash-multiple" style = {{fontSize : 24,color : '#61c0bf'}}/>
             )
         }
-    }
+    },
 },{
     contentComponent : CustomDrawerComponent
 })

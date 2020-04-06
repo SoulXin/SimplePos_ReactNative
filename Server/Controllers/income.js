@@ -3,6 +3,8 @@ const Income = require('../Models/income')
 exports.add_income = (req,res) => {
     Income.create({
         date : req.body.date,
+        code : req.body.code,
+        list_income : req.body.list_income,
         income : req.body.income
     })
     .then(response => {
@@ -21,7 +23,7 @@ exports.show_income = (req,res) => {
     
     var end = new Date();
     end.setHours(23,59,59,999);
-    
+
     if(type === "daily"){
         Income.find({
             date : {
@@ -43,13 +45,13 @@ exports.show_income = (req,res) => {
             // {$match : {"date" : {$gt : d}}},
             {$group : {_id : {
                 date : "$date",
-                order : "$order"
+                list_income : "$list_income"
             }}},
             {$group : {
                 _id : "$_id.date",
-                list_order_daily : {
+                list_income : {
                     $push : {
-                        order : "$_id.order"
+                        order : "$_id.list_income"
                     }
                 }
             }},
@@ -57,33 +59,20 @@ exports.show_income = (req,res) => {
                 $project: {
                     _id : "$_id",
                     weekNumber: { $isoWeek: "$_id"},
-                    list_order_daily : "$list_order_daily"
+                    list_income : "$list_income"
                 },
             },
             {$group : {
                 _id  : "$weekNumber",
-                list_order_week : {
+                list_income_week : {
                     $push : {
                         date : "$_id",
-                        list_order_daily : "$list_order_daily"
+                        list_income_daily : "$list_income"
                     }
                 }
-            }}
-           
+            }},
+            {$sort : {_id : 1}}
         ])
-        .then(response => {
-            res.json(response)
-        })
-        .catch(error => {
-            res.json(error)
-        })
-    }else if(type === "monthly"){
-        Income.find({
-            date: {
-                $gte: new Date(new Date() - 30 * 60 * 60 * 24 * 1000)
-            }
-        })
-        .sort({date : -1})
         .then(response => {
             res.json(response)
         })

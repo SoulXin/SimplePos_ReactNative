@@ -8,5 +8,6 @@ router.get('/show_product',product_Controller.show_product);
 router.put('/update_product/:id',product_Controller.update_product);
 router.delete('/delete_product/:id',product_Controller.delete_product);
 router.get('/detail_product/:id',product_Controller.detail_product);
+router.put('/update_qty/:id',product_Controller.update_qty)
 
 module.exports = router;

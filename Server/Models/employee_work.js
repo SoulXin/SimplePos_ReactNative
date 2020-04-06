@@ -5,6 +5,10 @@ const employee_workSchema = {
         type : String,
         required : true,
     },
+    date_work : {
+        type : Date,
+        required : true
+    },
     work_list : {
         type : Array,
         required : true

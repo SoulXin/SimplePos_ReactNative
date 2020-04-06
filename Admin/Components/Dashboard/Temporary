@@ -1,0 +1,193 @@
+    // const handleBack = () => {
+    //     if(dataContext.view === "invoice_detail"){
+    //         dispatch({type : 'CHANGE_VIEW',data : 'home'});
+    //         dispatch({type : 'CLEAR_INVOICE_DETAIL'});
+    //         navigation.navigate('InvoiceDetail');
+    //     }else{
+    //         dispatch({type : 'CHANGE_VIEW',data : 'home'})
+    //         navigation.navigate('InvoiceForm');
+    //     }
+    // }
+
+    // const handleCloseModalQty = () => {
+    //     setShowModalQty(false);
+    //     setQty(1);
+    // }
+
+    // 
+    // const handleOpenModalQty = (item) => {
+    //     setShowModalQty(true);
+    //     setPay_Mechanic(0);
+    //     setTemp_Add(item);
+    //     if(dataContext.invoice_detail.invoice_id){
+    //         axios({
+    //             method : 'GET',
+    //             url : `http://192.168.43.171:5000/invoice/detail_invoice/${dataContext.invoice_detail.invoice_id}`
+    //         })
+    //         .then(response => {
+    //             response.data.product.filter((list,index) => {
+    //                 if(list.id === item._id){
+    //                     setPay_Mechanic(formatMoney(list.pay_mechanic));
+    //                 }
+    //             });
+    //         })
+    //         .catch(error => {
+    //             console.log(error)
+    //         })
+    //     }else{
+    //         dataContext.temp_data_invoice.filter(list => {
+    //             if(list.id === item._id){
+    //                 setPay_Mechanic(formatMoney(list.pay_mechanic));
+    //             }
+    //         });
+    //     }
+    // }
+
+    // const handleOpenModal = (item) => {
+    //     setDetailProduct(item);
+    //     setShowModal(true);
+    // }
+
+        // const handleSearchProduct = (text) => {
+    //     setNameProduct(text);
+    //     const formattedQuery = text.toLowerCase()
+    //     const filter_data = _.filter(fullData,list => {
+    //         if(list.product_name.toLowerCase().includes(formattedQuery)){
+    //             return true
+    //         }
+    //         return false
+    //     })
+    //     setData(filter_data)
+    //     setTempData(filter_data)
+    // }
+
+    // const handleFocus = () => {
+    //     setNameProduct('');
+    //     setNameMotorcycle('');
+    //     setData(reloadData);
+    // }
+
+    // const handleSearchMotorcycle = (text) => {
+    //     setNameMotorcycle(text);
+    //     let data_filter = [];
+    //     const formattedQuery = text.toLowerCase();
+    //     tempData.filter((list,index) => {
+    //         _.filter(list.product_type,list_type => {
+    //             if(list_type.name.toLowerCase().includes(formattedQuery)){
+    //                 data_filter.push(list);
+    //             }
+    //         })
+    //     })
+    //     setData(data_filter);;
+    // }
+
+        const handleAdd = () => {
+        setShowModalQty(false);
+        const data = {
+            id : temp_add._id,
+            product_name : temp_add.product_name,
+            product_price : temp_add.product_price,
+            qty : qty,
+            pay_mechanic : pay_mechanic ? removeFormatMoney(pay_mechanic) : 0
+        }
+        if(dataContext.invoice_detail.invoice_id){
+            
+            axios({
+                method : 'GET',
+                url : `http://192.168.43.171:5000/invoice/detail_invoice/${dataContext.invoice_detail.invoice_id}`
+            })
+            .then(response => {
+                let temp_dataContext =  response.data.product.filter((list,index) => {
+                    return list.id !== data.id
+                });
+                const filter_data = _.filter(response.data.product,list => {
+                    if(list.id.includes(data.id)){
+                        return true
+                    }
+                    return false
+                });
+    
+                if(filter_data.length){
+                    const temp_filter_data = {
+                        id : filter_data[0].id,
+                        product_name : filter_data[0].product_name,
+                        product_price : filter_data[0].product_price,
+                        qty : filter_data[0].qty + qty,
+                        pay_mechanic : data.pay_mechanic
+                    }
+                    temp_dataContext.push(temp_filter_data);
+                    const data_already = {
+                        bk : dataContext.invoice_detail.bk,
+                        worker : dataContext.invoice_detail.worker,
+                        product : temp_dataContext,
+                    }
+     
+                    axios({
+                        method : 'PUT',
+                        url : `http://192.168.43.171:5000/invoice/update_invoice/${dataContext.invoice_detail.invoice_id}`,
+                        data : data_already  
+                    })
+                    .then(response => {
+                        setQty(1);
+                        temp_dataContext = [];
+                    })  
+                    .catch(error => {
+                        console.log(error);
+                    })
+                }else{
+                    temp_dataContext.push(data);
+                    const new_data = {
+                        bk : dataContext.invoice_detail.bk,
+                        worker : dataContext.invoice_detail.worker,
+                        product : temp_dataContext,
+                    }
+
+                    axios({
+                        method : 'PUT',
+                        url : `http://192.168.43.171:5000/invoice/update_invoice/${dataContext.invoice_detail.invoice_id}`,
+                        data : new_data  
+                    })
+                    .then(response => {
+                        temp_dataContext = [];
+                        setQty(1);
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    })
+                }
+            })
+            .catch(error => {
+                console.log(error)
+            })
+
+        }else{
+            const filter_data =  dataContext.temp_data_invoice.filter(list => {
+                if(list.id.includes(data.id)){
+                    return true
+                }
+                return false
+            });
+
+            if(filter_data.length){
+                setQty(1);
+                const filter = dataContext.temp_data_invoice.filter(list => list.id === data.id);
+                const temp_data_filter = dataContext.temp_data_invoice.filter(list => list.id !== data.id);
+                const data_filter = {
+                    id : filter[0].id,
+                    product_name : filter[0].product_name,
+                    product_price : filter[0].product_price,
+                    qty : filter[0].qty + data.qty,
+                    pay_mechanic : data.pay_mechanic
+                }
+                console.log(data_filter)
+                temp_data_filter.push(data_filter);                
+                dispatch({type : 'ADD_TEMP_DATA_INVOICE',data : temp_data_filter});
+            }else{
+                setQty(1);
+                Alert.alert('Pemberitahuan','Produk Berhasil Di Masukan Kedalam Bon',[{text : 'OK'}]);
+                let temp_data = dataContext.temp_data_invoice;
+                temp_data.push(data);
+                dispatch({type : 'ADD_TEMP_DATA_INVOICE',data : temp_data});
+            }
+        }
+    }

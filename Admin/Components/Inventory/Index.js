@@ -1,8 +1,10 @@
-import React,{useState,useCallback,useContext} from 'react'
-import { View, TouchableOpacity,FlatList,Modal, Alert } from 'react-native'
+import React,{useState,useCallback} from 'react'
+import { View, TouchableOpacity,FlatList,Modal,SafeAreaView } from 'react-native'
 import axios from 'axios'
 import { useFocusEffect } from 'react-navigation-hooks'
-import { Container, Header,  List, Item, Input, Icon, Button, ListItem, Left, Body, Right, Thumbnail, Text } from 'native-base';
+import {  Button, ListItem, Body, Right,Text } from 'native-base';
+import {handleShowModalUpdate,handleUpdate} from './Components/Functions'
+import styles from './Components/Styles'
 
 const Index = () => {
     const [data,setData] = useState([]);
@@ -30,36 +32,6 @@ const Index = () => {
         }
     },[]));
 
-    const handleShowModalUpdate = (item) => {
-        setShowModalUpdate(true);
-        setTemp_Detail(item);
-        setQty(item.qty);
-    }
-    const handleUpdate = () => {
-        setShowModalUpdate(false);
-        const data_qty = {
-            qty : parseInt(qty)
-        }
-        if(qty < temp_detail.qty){
-            Alert.alert('Pemberitahuan','Jumlah Produk Tidak Boleh Lebih Kecil Dari Jumlah Sekarang',[{text : 'OK'}]);
-        }else{
-            axios({
-                method : 'PUT',
-                url : `http://192.168.43.171:5000/inventory/update_inventory/${temp_detail._id}`,
-                data : data_qty
-            })
-            .then(response => {
-                if(qty > 2){
-                    const temp_data = data.filter(list => list._id !== temp_detail._id);
-                    setData(temp_data);
-                }
-            })
-            .catch(error => {
-                console.log(error)
-            })
-        }
-    }
-
     const _renderItem = ({item,index }) => {
         return (
             <ListItem thumbnail>
@@ -68,7 +40,7 @@ const Index = () => {
                     <Text note>Stok : {item.qty}</Text>
                 </Body>
                 <Right>
-                    <Button style = {{backgroundColor : '#61c0bf',borderRadius : 5,marginTop : 8}} onPress = {() => handleShowModalUpdate(item)}>
+                    <Button style = {styles.button_update} onPress = {() => handleShowModalUpdate(item,setShowModalUpdate,setTemp_Detail,setQty)}>
                         <Text>Update</Text>
                     </Button>
                 </Right>
@@ -80,51 +52,50 @@ const Index = () => {
         <View>
             {/* Modal Update */}
             <Modal visible = {showModalUpdate} transparent>
-                <View style = {{flex : 1,justifyContent : 'center',alignItems : 'center'}}>
-                    <View style = {{padding : 50,borderRadius : 10,backgroundColor : '#e3fdfd'}}>
-                        <Text style = {{fontWeight : 'bold',fontSize : 20,marginBottom : 10}}>Masukan Jumlah Produk</Text>
-                        <View style = {{flexDirection : 'row'}}>
-                            <View style = {{flex : 1,justifyContent : 'center',alignItems : 'center'}}>
-                                <TouchableOpacity style = {{paddingRight : 22,paddingLeft : 22,paddingTop : 9,paddingBottom : 9, borderRadius : 5,backgroundColor : '#ffb6b9'}} onPress = {() => qty > 1 ? setQty(qty - 1) : null}>
-                                    <Text style = {{fontSize : 24,fontWeight : 'bold'}}>-</Text>
+                <View style = {styles.container_modal}>
+                    <View style = {styles.container_box_modal}>
+                        <Text style = {styles.title}>Masukan Jumlah Produk</Text>
+                        <View style = {styles.row}>
+                            <View style = {styles.container_button}>
+                                <TouchableOpacity style = {styles.button_decrement} onPress = {() => qty > 1 ? setQty(qty - 1) : null}>
+                                    <Text style = {styles.button_text}>-</Text>
                                 </TouchableOpacity>
                             </View>
                             <View style = {{flex : 1}}>
-                                <Text style = {{padding : 10,textAlign : 'center'}}>
+                                <Text style = {styles.text_qty}>
                                     {qty}
                                 </Text>
                             </View>
-                            <View style = {{flex : 1,justifyContent : 'center',alignItems : 'center'}}>
-                                <TouchableOpacity style = {{paddingRight : 20,paddingLeft : 20,paddingTop : 9,paddingBottom : 9,borderRadius : 5,backgroundColor : '#61c0bf'}} onPress = {() => setQty(qty + 1)}>
-                                    <Text style = {{fontSize : 24,fontWeight : 'bold'}}>+</Text>
+                            <View style = {styles.container_button}>
+                                <TouchableOpacity style = {styles.button_increment} onPress = {() => setQty(qty + 1)}>
+                                    <Text style = {styles.button_text}>+</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
 
-                        <View style = {{marginTop : 20,flexDirection : 'row'}}>
-                            <View style = {{flex : 1,margin : 2}}>
-                                <TouchableOpacity style = {{padding : 10,borderRadius : 7,backgroundColor : '#ffb6b9'}} onPress = {() => setShowModalUpdate(false)}>
-                                    <Text style = {{fontSize : 14,textAlign : 'center'}}>Batal</Text>
+                        <View style = {styles.row_bottom}>
+                            <View style = {styles.cell_row_bottom}>
+                                <TouchableOpacity style = {styles.button_cancel} onPress = {() => setShowModalUpdate(false)}>
+                                    <Text style = {styles.button_text}>Batal</Text>
                                 </TouchableOpacity>
                             </View>
 
-                            <View style = {{flex : 1,margin : 2}}>
-                                <TouchableOpacity  style = {{padding : 10,borderRadius : 7,backgroundColor : '#61c0bf'}} onPress = {handleUpdate}>
-                                    <Text style = {{fontSize : 14,textAlign : 'center'}}>Perbarui</Text>
+                            <View style = {styles.cell_row_bottom}>
+                                <TouchableOpacity  style = {styles.button_refresh} onPress = {() => handleUpdate(qty,temp_detail,data,setShowModalUpdate,setData)}>
+                                    <Text style = {styles.button_text}>Perbarui</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
                     </View>
                 </View>
             </Modal>
-            <List>
+            <SafeAreaView>
                 <FlatList
-                    keyExtractor={(item, index) => item._id}
                     data = {data}
                     renderItem = {_renderItem}
                     keyExtractor = {(item,index) => index.toString()}
                 />
-            </List>
+            </SafeAreaView>
         </View>
     )
 }

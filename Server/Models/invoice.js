@@ -5,7 +5,7 @@ const invoiceSchema = {
         type : String,
         required : true
     },
-    worker : {
+    mechanic : {
         type : String,
         required : true
     },

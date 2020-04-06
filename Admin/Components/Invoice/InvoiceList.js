@@ -1,13 +1,21 @@
-import React,{useState,useCallback,useContext} from 'react'
+import React,{useState,useCallback} from 'react'
 import { View,FlatList,Modal,TouchableOpacity } from 'react-native'
 import axios from 'axios'
 import { useFocusEffect } from 'react-navigation-hooks'
-import { Container, Header,  List, Item, Input, Icon, Button, ListItem, Left, Body, Right, Thumbnail,Text } from 'native-base';
-import {formatMoney} from './Components/Functions'
+import { Container, List, Button, ListItem, Body, Right,Text } from 'native-base';
+import {formatMoney} from '../../Global_Functions/Functions'
+import { handleShowModalDelete,handleDelete } from './Components/Functions/InvoiceList'
+import styles from './Components/Styles/InvoiceList'
+
 const InvoiceList = ({navigation}) => {
+    // Data
     const [data,setData] = useState([]);
+
+    // Temporary Data
     const [temp_id,setTemp_Id] = useState('');
     const [temp_bk,setTemp_Bk] = useState('');
+
+    // Modal
     const [showModalDelete,setShowModalDelete] = useState(false);
 
     useFocusEffect(useCallback(() => {
@@ -29,26 +37,7 @@ const InvoiceList = ({navigation}) => {
             source.cancel();
         }
     },[]));
-    const handleShowModalDelete = (id,bk) => {
-        setShowModalDelete(true);
-        setTemp_Id(id);
-        setTemp_Bk(bk);
-    }
 
-    const handleDelete = () => {
-        axios({
-            method : 'DELETE',
-            url : `http://192.168.43.171:5000/invoice/delete_invoice/${temp_id}`
-        })
-        .then(response => {
-            setShowModalDelete(false);
-            const temp_data = data.filter(list => list._id !== temp_id);
-            setData(temp_data);
-        })
-        .catch(error => {
-            console.log(error)
-        })
-    }
     const _renderItem = ({item,index }) => {
         var  temp_total = [];
         var temp_total_pay_mechanic = [];
@@ -70,8 +59,7 @@ const InvoiceList = ({navigation}) => {
         }, 0);
 
         const data = {
-            product : item.product,
-            worker : item.worker,
+            mechanic : item.mechanic,
             bk : item.bk,
             date_order : item.date_order,
             invoice_id : item._id
@@ -82,14 +70,14 @@ const InvoiceList = ({navigation}) => {
                 <Body>
                     <Text>{item.bk}</Text>
                     <Text>Rp. {formatMoney(sum_total + sum_total_pay_mechanic)}</Text>
-                    <Text note>Mekanik : {item.worker}</Text>
+                    <Text note>Mekanik : {item.mechanic}</Text>
                 </Body>
                 <Right>
-                    <View style = {{flexDirection : 'row'}}>
-                        <Button style = {{backgroundColor : '#ffb6b9',borderRadius : 5,marginTop : 8,marginRight : 5}}  onPress = {() => handleShowModalDelete(item._id,item.bk)}>
+                    <View style = {styles.row_invoice}>
+                        <Button style = {styles.button_delete_invoice}  onPress = {() => handleShowModalDelete(item._id,item.bk,setShowModalDelete,setTemp_Id,setTemp_Bk)}>
                             <Text>Hapus</Text>
                         </Button>
-                        <Button style = {{backgroundColor : '#61c0bf',borderRadius : 5,marginTop : 8,marginLeft : 5}}  onPress = {() => navigation.navigate('InvoiceDetail',data)}>
+                        <Button style = {styles.button_detail_invoice}  onPress = {() => navigation.navigate('InvoiceDetail',data)}>
                             <Text>Detail</Text>
                         </Button>
                     </View>
@@ -100,29 +88,29 @@ const InvoiceList = ({navigation}) => {
 
     return (
         <Container>
-        <Modal visible = {showModalDelete} transparent>
-                <View style = {{flex : 1,justifyContent : 'center',alignItems : 'center'}}>
-                    <View style = {{padding : 50,backgroundColor : '#e3fdfd',borderRadius : 10}}>
-                        <Text style = {{fontWeight : 'bold',fontSize : 20,marginBottom : 10,textAlign : 'center'}}>Hapus Tagihan Ini ?</Text>
-                        <Text style = {{fontWeight : 'bold',fontSize : 20,marginBottom : 10,textAlign : 'center'}}>{temp_bk}</Text>
-                        <View style = {{flexDirection : 'row',marginTop : 20}}>
+            <Modal visible = {showModalDelete} transparent>
+                <View style = {styles.container_modal_delete}>
+                    <View style = {styles.container_box_modal_delete}>
+                        <Text style = {styles.title_modal}>Hapus Tagihan Ini ?</Text>
+                        <Text style = {styles.title_modal}>{temp_bk}</Text>
+                        <View style = {styles.row_modal_delete}>
                             <View style = {{flex : 1}}>
-                                <TouchableOpacity onPress = {() => setShowModalDelete(false)} style = {{backgroundColor : '#ffb6b9',padding : 10,borderRadius : 5,alignItems : 'center',margin : 2}}>
-                                    <Text>Tutup</Text>
+                                <TouchableOpacity onPress = {() => setShowModalDelete(false)} style = {styles.button_close_modal_delete}>
+                                    <Text>Tidak</Text>
                                 </TouchableOpacity>
                             </View>
 
                             <View style = {{flex : 1}}>
-                                <TouchableOpacity onPress = {handleDelete} style = {{backgroundColor : '#61c0bf',padding : 10,borderRadius : 5,alignItems : 'center',margin : 2}}>
-                                    <Text>Ok</Text>
+                                <TouchableOpacity onPress = {() => handleDelete(data,temp_id,setShowModalDelete,setData)} style = {styles.button_delete_modal_delete}>
+                                    <Text>Ya</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
                     </View>
                 </View>
             </Modal>
-            <TouchableOpacity style = {{padding : 10,borderRadius : 7,margin : 10,backgroundColor : '#61c0bf'}} onPress = {() => navigation.navigate('InvoiceForm')}>
-                <Text style = {{fontSize : 20,fontWeight : 'bold',textAlign : 'center'}}>Buka Faktur Baru</Text>
+            <TouchableOpacity style = {styles.button_new_invoice} onPress = {() => navigation.navigate('InvoiceForm')}>
+                <Text style = {styles.text_new_invoice}>Buka Faktur Baru</Text>
             </TouchableOpacity> 
             <List>
                 <FlatList

@@ -5,12 +5,22 @@ import {Context} from '../../Context/Context'
 import { useFocusEffect } from 'react-navigation-hooks'
 import axios from 'axios'
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import {formatRupiah,removeFormatMoney,formatMoney} from './Components/Functions'
+import {formatRupiah,formatMoney} from '../../Global_Functions/Functions'
+import {
+    handleNavigation,
+    handleModalDetail,
+    handleAdd,
+    handleDelete,
+    handleUpdate,
+    handleIncrement,
+    handleDecrement
+} from './Components/Functions/InvoiceForm'
+import styles from './Components/Styles/InvoiceForm'
 
 const InvoiceForm = ({navigation}) => {
     const [bk,setBK] = useState('');
-    const [worker,setWorker] = useState('');
-    const [showModalDetail,setShowModalDetail] = useState(false);
+    const [mechanic,setMechanic] = useState('');
+    const [showModalDetail,setShow_Modal_Detail] = useState(false);
     const [temp_detail,setTemp_Detail] = useState('');
     const {dataContext,dispatch} = useContext(Context);
     const [index,setIndex] = useState('');
@@ -39,82 +49,22 @@ const InvoiceForm = ({navigation}) => {
         }
     },[]));
 
-    const handleNavigation = () => {
-        dispatch({type : 'CHANGE_VIEW',data : 'invoice'});
-        navigation.navigate('Home');
-    }
-
     const viewProductInvoice = () => dataContext.temp_data_invoice.length ? dataContext.temp_data_invoice.map((list,index) => {
         return(
-            <TouchableOpacity disabled = {showModalDetail} style = {{flexDirection : 'row',alignItems : 'center',margin : 5,padding : 10,borderRadius : 5,borderWidth : 1}} key = {index} onPress = {() => handleModalDetail(list.id,index)}>
-                <Text style = {{flex : 1,textAlign : 'center'}}> {list.product_name}</Text>
-                <Text style = {{flex : 1,textAlign : 'center'}}> {list.qty}</Text>
-                <Text style = {{flex : 1,textAlign : 'center'}}>Rp. {formatMoney(list.product_price)}</Text>
-                <Text style = {{flex : 1,textAlign : 'center'}}>Rp. {formatMoney(list.qty * list.product_price + list.pay_mechanic)}</Text>
+            <TouchableOpacity disabled = {showModalDetail} style = {styles.table_child_row} key = {index} onPress = {() => handleModalDetail(list.id,index,dataContext,setTemp_Detail,setPay_Mechanic,setShow_Modal_Detail,setIndex)}>
+                <Text style = {styles.table_name_cell}> {list.product_name}</Text>
+                <Text style = {styles.table_name_cell}> {list.qty}</Text>
+                <Text style = {styles.table_name_cell}>Rp. {formatMoney(list.product_price)}</Text>
+                <Text style = {styles.table_name_cell}>Rp. {formatMoney(list.qty * list.product_price + list.pay_mechanic)}</Text>
             </TouchableOpacity>
         )
     }) : null
     
-    const handleModalDetail = (id,index) => {
-        const filter = dataContext.temp_data_invoice.filter(list => list.id === id);
-        setTemp_Detail(filter[0]);
-        setPay_Mechanic(formatMoney(filter[0].pay_mechanic));
-        setShowModalDetail(true);
-        dataContext.temp_data_invoice.splice(index,1);
-        setIndex(index);
-    }
-
-    const handleCancel = () => {
-        navigation.navigate('InvoiceList');
-        dispatch({type : 'CLEAR_TEMP_DATA_INVOICE'});
-    }
-
-    const handleAdd = () => {
-        const data = {
-            bk : bk,
-            worker : worker,
-            product : dataContext.temp_data_invoice
-        }
-        console.log(data)
-        axios({
-            method : 'POST',
-            url : `http://192.168.43.171:5000/invoice/add_invoice`,
-            data : data
-        })
-        .then(response => {
-            dispatch({type : 'CLEAR_TEMP_DATA_INVOICE'});
-            setBK('');
-            setWorker('');
-            Alert.alert('Pemberitahuan','Bon Berhasil Di Buat',[{text : 'OK',onPress : () => navigation.navigate('InvoiceList')}]);
-        })
-        .catch(error => {
-            console.log(error)
-        })
-    }
-
-    const handleDelete = () => {
-        setShowModalDetail(false);
-        setTemp_qty(0);
-    }
-
-    const handleUpdate = () => {
-        const temp_detail_product = {
-            id : temp_detail.id,
-            product_name : temp_detail.product_name,
-            product_price : temp_detail.product_price,
-            qty : temp_detail.qty + temp_qty,
-            pay_mechanic : pay_mechanic ? removeFormatMoney(pay_mechanic) : 0
-        }
-        dataContext.temp_data_invoice.splice(index,0,temp_detail_product);
-        setShowModalDetail(false);
-        setTemp_qty(0);
-    }
-
     const button = () => {
         if(temp_detail.qty + temp_qty == 0){
             return (
                 <View>
-                    <TouchableOpacity style = {{backgroundColor : '#ffb6b9',padding : 10,borderRadius : 5,alignItems : 'center',margin : 2}} onPress = {handleDelete}>
+                    <TouchableOpacity style = {styles.button_delete_product} onPress = {() => handleDelete(setShow_Modal_Detail,setTemp_qty)}>
                         <Text>Hapus</Text>
                     </TouchableOpacity>
                 </View>
@@ -123,23 +73,11 @@ const InvoiceForm = ({navigation}) => {
         else{
             return(
                 <View>
-                    <TouchableOpacity style = {{backgroundColor : '#61c0bf',padding : 10,borderRadius : 5,alignItems : 'center',margin : 2}} onPress = {handleUpdate}>
+                    <TouchableOpacity style = {styles.button_refresh_product} onPress = {() => handleUpdate(temp_detail,temp_qty,pay_mechanic,dataContext,index,setShow_Modal_Detail,setTemp_qty)}>
                         <Text>Perbarui Jumlah Produk</Text>
                     </TouchableOpacity>
                 </View>
             )
-        }
-    }
-
-    const handleIncrement = () => {
-        setTemp_qty(temp_qty + 1);
-    }
-
-    const handleDecrement = () => {
-        if(temp_detail.qty + temp_qty > 0){
-            setTemp_qty(temp_qty - 1)
-        }else{
-            console.log("sudah 0")
         }
     }
 
@@ -150,39 +88,39 @@ const InvoiceForm = ({navigation}) => {
     }) : null;
 
     return (
-        <View style = {{flex : 1,margin : 10}}>
+        <View style = {styles.container}>
             <Modal visible = {showModalDetail} transparent>
-                <View style = {{flex : 1,justifyContent : 'center',alignItems : 'center'}}>
-                    <View style = {{padding : 50,backgroundColor : '#e3fdfd',borderRadius : 10}}>
-                        <Text style = {{fontWeight : 'bold',fontSize : 20,marginBottom : 10}}>Masukan Jumlah Produk</Text>
-                        <Text style = {{fontWeight : 'bold',fontSize : 20,marginBottom : 10}}>({temp_detail.product_name})</Text>
-                        <View style = {{flexDirection : 'row'}}>
-                            <View style = {{flex : 1,justifyContent : 'center',alignItems : 'center',opacity : 1}}>
-                                <TouchableOpacity style = {{paddingRight : 22,paddingLeft : 22,paddingTop : 9,paddingBottom : 9, borderRadius : 5,backgroundColor : '#ffb6b9'}} onPress = {handleDecrement}>
-                                    <Text style = {{fontSize : 24,fontWeight : 'bold'}}>-</Text>
+                <View style = {styles.container_modal_detail}>
+                    <View style = {styles.container_box_modal_detail}>
+                        <Text style = {styles.title_text_modal_detail}>Masukan Jumlah Produk</Text>
+                        <Text style = {styles.title_text_modal_detail}>({temp_detail.product_name})</Text>
+                        <View style = {styles.row}>
+                            <View style = {styles.button_decrement}>
+                                <TouchableOpacity style = {styles.container_button_decrement} onPress = {() => handleDecrement(temp_detail,temp_qty,setTemp_qty)}>
+                                    <Text style = {styles.button_text}>-</Text>
                                 </TouchableOpacity>
                             </View>
                             <View style = {{flex : 1}}>
-                                <Text style = {{padding : 10,textAlign : 'center'}}>
+                                <Text style = {styles.qty_text}>
                                     {temp_detail.qty + temp_qty}
                                 </Text>
                             </View>
-                            <View style = {{flex : 1,justifyContent : 'center',alignItems : 'center'}}>
-                                <TouchableOpacity style = {{paddingRight : 20,paddingLeft : 20,paddingTop : 9,paddingBottom : 9,borderRadius : 5,backgroundColor : '#61c0bf'}} onPress = {handleIncrement}>
-                                    <Text style = {{fontSize : 24,fontWeight : 'bold'}}>+</Text>
+                            <View style = {styles.button_increment}>
+                                <TouchableOpacity style = {styles.container_button_increment} onPress = {() => handleIncrement(setTemp_qty,temp_qty)}>
+                                    <Text style = {styles.button_text}>+</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
 
-                        <Text style = {{fontWeight : 'bold',fontSize : 20,marginBottom : 10,textAlign : 'center',marginTop : 10}}>Biaya Pemasangan</Text>
-                        <View style = {{flexDirection : 'row'}}>
+                        <Text style = {styles.title_second_option}>Biaya Pemasangan</Text>
+                        <View style = {styles.row}>
                             <TextInput
-                                style = {{flex : 4, borderWidth : 1,borderRadius : 7,textAlign : 'center',fontSize : 20,fontWeight : 'bold',color : 'red'}}
-                                value = {pay_mechanic ? pay_mechanic.toString() : 0}
+                                style = {styles.text_input_pay_mechanic}
+                                value = {pay_mechanic ? pay_mechanic.toString() : '0'}
                                 onChangeText = {(e) => formatRupiah(e,'Rp. ',setPay_Mechanic)}
                             />
 
-                            <TouchableOpacity style = {{flex : 1,alignItems : 'center',justifyContent : 'center',borderWidth : 1,borderRadius : 7,margin : 3 }} onPress = {() => setPay_Mechanic('0')}>
+                            <TouchableOpacity style = {styles.button_reset_pay_mechanic} onPress = {() => setPay_Mechanic('0')}>
                                 <Icon name = "undo" style = {{fontSize : 20}} />
                             </TouchableOpacity>
                         </View>
@@ -194,63 +132,62 @@ const InvoiceForm = ({navigation}) => {
                 </View>
             </Modal>
 
-            <View style = {{flexDirection : 'row',justifyContent : 'space-around',alignItems : 'center'}}>
-                <View style = {{flex : 1,margin : 10}}>
+            {/* Header */}
+            <View style = {styles.container_header_invoice}>
+                <View style = {styles.container_motorcycle_code}>
                     <Text>BK Kereta</Text>
                     <TextInput 
                         placeholder = "BK Kereta"
                         style = {{borderBottomWidth : 1}}
-                        returnKeyType = "next" 
-                        onSubmitEditing = {() => inputWorker.focus()}
                         onChangeText = {(e) => setBK(e)}
                         value = {bk}
                     />
                 </View>
-                <View style = {{flex : 2,margin : 10}}>
+                <View style = {styles.container_mechanic}>
                     <Text>Mekanik</Text>
                     <Picker 
-                        selectedValue = {worker}
-                        onValueChange = {(value) => setWorker(value)}
+                        selectedValue = {mechanic}
+                        onValueChange = {(value) => setMechanic(value)}
                     >
                         <Picker label = "Tidak Ada" value = "Tidak Ada"/>
                         {viewEmployee()}
                     </Picker>
                 </View>
-                <View style = {{flex : 1,alignItems : 'flex-start'}}>
+                <View style = {styles.container_date}>
                     <Text>{moment().format('ll')}</Text>
                 </View>
             </View>
 
-            <View style = {{flexDirection : 'row',margin : 5,padding : 10}}>
-                <Text style = {{flex : 1,textAlign : 'center'}}>Nama Produk</Text>
-                <Text style = {{flex : 1,textAlign : 'center'}}>Jumlah</Text>
-                <Text style = {{flex : 1,textAlign : 'center'}}>Harga</Text>
-                <Text style = {{flex : 1,textAlign : 'center'}}>Total</Text>
+            {/* Table Header */}
+            <View style = {styles.container_table_header}>
+                <Text style = {styles.table_name_cell}>Nama Produk</Text>
+                <Text style = {styles.table_name_cell}>Jumlah</Text>
+                <Text style = {styles.table_name_cell}>Harga</Text>
+                <Text style = {styles.table_name_cell}>Total</Text>
             </View>
 
-            <View style = {{height : 260}}>
+            {/* List */}
+            <View style = {{flex : 6}}>
                 <ScrollView>
                     {viewProductInvoice()}
                 </ScrollView>
             </View>
 
-            <View style = {{flexDirection : 'column',width : '100%',justifyContent : 'center',alignItems : 'center',position : 'absolute',bottom : 0}}>            
-                <View style = {{flexDirection : 'row',flex : 1}}>
+            {/* Button */}
+            <View style = {styles.container_bottom_header}>            
+                <View style = {styles.row}>
                     <View style = {{flex : 1}}>
-                        <TouchableOpacity style = {{backgroundColor : '#61c0bf',padding : 10,margin : 10,borderRadius : 10}} onPress = {handleNavigation}>
+                        <TouchableOpacity style = {styles.button_add_product} onPress = {() => handleNavigation(dispatch,navigation)}>
                             <Text style = {{textAlign : 'center'}}>Tambah Produk</Text>
                         </TouchableOpacity>
                     </View>
                     <View style = {{flex : 1}}>
-                        <TouchableOpacity style = {{backgroundColor : '#61c0bf',padding : 10,margin : 10,borderRadius : 10}} onPress = {handleAdd}>
+                        <TouchableOpacity style = {styles.button_add_invoice} onPress = {() => handleAdd(bk,mechanic,dataContext,dispatch,setBK,setMechanic,navigation,Alert)}>
                             <Text style = {{textAlign : 'center'}}>Buka Bon</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
             </View>
-
-
-    
         </View>
     )
 }

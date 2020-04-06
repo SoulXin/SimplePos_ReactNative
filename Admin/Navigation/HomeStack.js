@@ -1,8 +1,5 @@
-import React from 'react'
 import {createStackNavigator} from 'react-navigation-stack'
 import Home from '../Components/Dashboard/Home'
-import Detail from '../Components/Dashboard/Detail'
-import Search from '../Components/Dashboard/Search'
 
 const screens = {
     Home : {
@@ -12,9 +9,6 @@ const screens = {
                 headerShown : false
             }
         }
-    },
-    DetailList : {
-        screen : Detail
     }
 }
 

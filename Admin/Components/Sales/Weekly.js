@@ -1,9 +1,12 @@
 import React,{useState,useCallback} from 'react'
-import { View,FlatList, ActivityIndicator,Modal,ScrollView,TouchableOpacity,TextInput, Alert} from 'react-native'
-import { Container, Header,  List, Item, Input, Icon, Button, ListItem, Left, Body, Right, Thumbnail, Text } from 'native-base';
+import { View,FlatList, Modal,ScrollView,TouchableOpacity} from 'react-native'
+import { Container, List, Button, ListItem,  Body, Right, Text } from 'native-base';
 import axios from 'axios'
 import { useFocusEffect } from 'react-navigation-hooks'
-import {formatMoney,date} from './Components/Functions'
+import {formatMoney,date} from '../../Global_Functions/Functions'
+import {handleDetail} from './Components/Functions/Weekly'
+import styles from './Components/Styles/Weekly'
+
 const Index = () => {
     const [data,setData] = useState([]);
     const [showModalDetail,setShowModalDetail] = useState(false);
@@ -29,11 +32,6 @@ const Index = () => {
         }
     },[]));
 
-    const handleDetail = (item) => {
-        setShowModalDetail(true);
-        setDetailData(item);
-    }
-
     const viewList_Order_Daily = () => detailData ? detailData.map((list,index) => {
         var  temp_total = [];
         list.list_order_daily.map(list_daily => {
@@ -44,12 +42,12 @@ const Index = () => {
         }, 0);
         
         return(
-            <View style = {{flexDirection : 'row',padding : 10,borderRadius : 7,borderWidth : 1,margin : 5}} key = {index}>
-                <Text style = {{flex : 1,textAlign : 'center'}}> {date(list.date_order)}</Text>
-                <Text style = {{flex : 1,textAlign : 'center'}}>Rp. {formatMoney(sum_total)}</Text>
+            <View style = {styles.row_child} key = {index}>
+                <Text style = {styles.text}> {date(list.date_order)}</Text>
+                <Text style = {styles.text}>Rp. {formatMoney(sum_total)}</Text>
             </View>
         )
-    }):null
+    }):null;
 
     const _renderItem = ({item,index }) => {
         var  temp_total = [];
@@ -66,10 +64,10 @@ const Index = () => {
             <ListItem avatar>
                 <Body>
                     <Text style = {{fontSize : 14}}>Minggu Ke  {item._id}</Text>
-                    <Text style = {{fontWeight : 'bold',fontSize : 20}}>Rp. {formatMoney(sum_total)}</Text>
+                    <Text style = {styles.title_text}>Rp. {formatMoney(sum_total)}</Text>
                 </Body>
                 <Right>
-                    <Button style = {{backgroundColor : '#61c0bf',borderRadius : 5,marginTop : 8}} onPress = {() => handleDetail(item.list_order_week)}>
+                    <Button style = {styles.button_detail} onPress = {() => handleDetail(item.list_order_week,setShowModalDetail,setDetailData)}>
                         <Text>Detail</Text>
                     </Button>
                 </Right>
@@ -80,18 +78,30 @@ const Index = () => {
     return (
         <Container>
             <Modal visible = {showModalDetail}>
-                <View style = {{flex : 1,margin : 10}}>
-                    <ScrollView>
-                        {viewList_Order_Daily()}
-                    </ScrollView>
-                    <View style = {{position : 'absolute',bottom : 0,width : '100%'}}>
-                        <TouchableOpacity style = {{backgroundColor : '#61c0bf',padding : 10,margin : 10,borderRadius : 5}} onPress = {() => setShowModalDetail(false)}>
+                <View style = {styles.container}>
+                    <View style = {styles.table_header}>
+                        <Text style = {styles.table_cell_1}>Tanggal</Text>
+                        <Text style = {styles.table_cell_1}>Hasil Penjualan</Text>
+                    </View>
+                    {/* List */}
+                    <View style = {{flex : 10}}>
+                        <ScrollView>
+                            {viewList_Order_Daily()}
+                        </ScrollView>
+                    </View>
+
+                    {/* Button */}
+                    <View style = {styles.button_container}>
+                        <TouchableOpacity style = {styles.button_ok} onPress = {() => setShowModalDetail(false)}>
                             <Text style = {{textAlign : 'center'}}>OK</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
             </Modal>
             <List>
+                <View style = {styles.top_header_invoice}>
+                    <Text style = {styles.title_text}>Penjualan Mingguan</Text>
+                </View>
                 <FlatList
                     keyExtractor={(item, index) => index.toString()}
                     data = {data}

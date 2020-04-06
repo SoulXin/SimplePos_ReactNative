@@ -3,7 +3,7 @@ const Invoice = require('../Models/invoice')
 exports.add_invoice = (req,res) => {
     Invoice.create({
         bk : req.body.bk,
-        worker : req.body.worker,
+        mechanic : req.body.mechanic,
         product : req.body.product
     })
     .then(response => {
@@ -28,7 +28,7 @@ exports.update_invoice = (req,res) => {
     var id = req.params.id;
     Invoice.updateOne({_id : id},{
         bk : req.body.bk,
-        worker : req.body.worker,
+        mechanic : req.body.mechanic,
         product : req.body.product
     },{new: true})
     .then(response => {

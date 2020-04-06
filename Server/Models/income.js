@@ -5,6 +5,14 @@ const incomeSchema = {
         type : Date,
         required : true,
     },
+    code : {
+        type : String,
+        required : true
+    },
+    list_income : {
+        type : Array,
+        required : true
+    },
     income : {
         type : Number,
         required : true

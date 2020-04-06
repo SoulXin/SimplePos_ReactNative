@@ -1,9 +1,11 @@
-import React, { useEffect, useState,useCallback } from 'react'
-import { View, TouchableOpacity,FlatList } from 'react-native'
-import { Container, Header,  List, Item, Input, Icon, Button, ListItem, Left, Body, Right, Thumbnail, Text } from 'native-base';
+import React, { useState,useCallback } from 'react'
+import { View,FlatList,SafeAreaView } from 'react-native'
+import { Container, Header,  List, Item, Input, Button, ListItem, Body, Right, Text } from 'native-base';
 import axios from 'axios'
-import _ from 'lodash'
 import { useFocusEffect } from 'react-navigation-hooks'
+import {formatMoney} from '../../Global_Functions/Functions'
+import { handleSearch } from './Components/Functions/ProductList'
+import styles from './Components/Styles/ProductList';
 
 const ProductList = ({navigation}) => {
     const [data,setData] = useState([]);
@@ -30,25 +32,13 @@ const ProductList = ({navigation}) => {
         }
     },[]));
 
-    function formatMoney(amount, thousands = ".") {
-        try {
-          const negativeSign = amount < 0 ? "-" : "";
-          let i = parseInt(amount = Math.abs(Number(amount) || 0)).toString();
-          let j = (i.length > 3) ? i.length % 3 : 0;
-      
-          return negativeSign + (j ? i.substr(0, j) + thousands : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + thousands) + "";
-        } catch (e) {
-          console.log(e)
-        }
-    };
-
     const _renderItem = ({item,index }) => {
         return (
             <ListItem avatar>
                 <Body>
-                    <View style = {{flexDirection : 'row',alignItems : 'center'}}>
+                    <View style = {styles.row}>
                         <View style = {{flex : 1}}>
-                            <Text style = {{fontSize : 20,fontWeight : 'bold',textAlign : 'center'}}>{item.qty}</Text>
+                            <Text style = {styles.text_qty}>{item.qty}</Text>
                         </View>
 
                         <View style = {{flex : 4}}>
@@ -59,40 +49,31 @@ const ProductList = ({navigation}) => {
                     </View>
                 </Body>
                 <Right>
-                    <Button style = {{backgroundColor : '#61c0bf',borderRadius : 5,marginTop : 8}}  onPress = {() => navigation.navigate('ProductDetail',item)}>
+                    <Button style = {styles.button_detail}  onPress = {() => navigation.navigate('ProductDetail',item)}>
                         <Text>Detail</Text>
                     </Button>
                 </Right>
             </ListItem>
         )
     }
-    const handleSearch = (text) => {
-        const formattedQuery = text.toLowerCase();
-        const data = _.filter(fullData,list => {
-            if(list.product_name.toLowerCase().includes(formattedQuery)){
-                return true
-            }
-            return false
-        })
-        setData(data)
-    }
+
     return (
         <Container>
-            <Header searchBar style = {{backgroundColor : '#61c0bf'}}>
-                <Item style = {{borderRadius : 5}}>
-                    <Input placeholder= "Cari Produk" onChangeText = {handleSearch}/>
+            <Header searchBar style = {styles.header_searchbar}>
+                <Item style = {styles.column_searchbar}>
+                    <Input placeholder= "Cari Produk" onChangeText = {(text) => handleSearch(text,fullData,setData)}/>
                 </Item>
             </Header>
 
-            <List>
+            <SafeAreaView  style = {{flex : 1}}>
                 <FlatList
                     data = {data}
                     renderItem = {_renderItem}
                     keyExtractor = {(item,index) => index.toString()}
                 />
-            </List>
+            </SafeAreaView>
 
-            <Button rounded style = {{position : 'absolute',bottom : 20,left : 20,backgroundColor : '#61c0bf'}} onPress = {() => navigation.navigate('ProductForm')}>
+            <Button rounded style = {styles.button_add_product} onPress = {() => navigation.navigate('ProductForm')}>
                 <Text>Tambah Produk</Text>
             </Button>
         </Container>

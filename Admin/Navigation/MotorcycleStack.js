@@ -5,19 +5,34 @@ import MotorcycleDetail from '../Components/Type/MotorcycleDetail'
 
 const screens = {
     MotorcycleList : {
-        screen : MotorcycleList
+        screen : MotorcycleList,
+        navigationOptions : () => {
+            return {
+                headerShown : false
+            }
+        }
     },
     MotorcycleDetail : {
-        screen : MotorcycleDetail
+        screen : MotorcycleDetail,
+        navigationOptions : () => {
+            return {
+                title : 'Tampilan Detail Kereta'
+            }
+        }
     },
     MotorcycleForm : {
-        screen : MotorcycleForm
+        screen : MotorcycleForm,
+        navigationOptions : () => {
+            return {
+                title : 'Tambah Jenis Kereta Baru'
+            }
+        }
     }
 }
 
 const MotorcycleStack = createStackNavigator(screens,{
     defaultNavigationOptions : {
-        headerShown : false
+        headerStyle : {backgroundColor : '#61c0bf',height : 60}
     }
 })
 
