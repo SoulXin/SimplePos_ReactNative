@@ -2,6 +2,7 @@ const Employee = require('../Models/employee')
 
 exports.add_employee = (req,res) => {
     Employee.create({
+        user_id : req.body.user_id,
         name : req.body.name,
         age : req.body.age,
         religion : req.body.religion,
@@ -18,7 +19,10 @@ exports.add_employee = (req,res) => {
 }
 
 exports.show_employee = (req,res) => {
-    Employee.find({})
+    var user_id = req.params.user_id
+    Employee.find({
+        user_id : user_id
+    })
     .then(response => {
         res.json(response)
     })

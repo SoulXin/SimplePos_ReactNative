@@ -1,6 +1,10 @@
 const mongoose = require("../Database/db");
 
 const salesSchema = {
+    user_id : {
+        type : String,
+        required : true
+    },
     date_order : {
         type : Date,
         required : true,

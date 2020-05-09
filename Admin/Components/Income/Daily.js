@@ -4,40 +4,50 @@ import { View, FlatList,Modal,TouchableOpacity,ScrollView } from 'react-native'
 import { useFocusEffect } from 'react-navigation-hooks'
 import axios from 'axios'
 import styles from './Components/Styles/Daily'
-import {formatMoney, date} from '../../Global_Functions/Functions'
+import {formatMoney, date, checkUserSignedIn, clear_AsyncStorage} from '../../Global_Functions/Functions'
 import {
     handleOpen_Modal_Product,
     handleClose_Modal_Product,
     handleOpen_Modal_Mechanic,
     handleClose_Modal_Mechanic
 } from './Components/Functions/Daily'
+import Loading from '../Modal_Loading/Loading'
 
-const Daily = () => {
+const Daily = ({navigation}) => {
     const [data,setData] = useState([]);
     const [show_Modal_Product,setShow_Modal_Product] = useState(false);
     const [show_Modal_Mechanic,setShow_Modal_Mechanic] = useState(false);
     const [temp_Detail,setTemp_Detail] = useState('');
-    const [daily_Time,setDaily_Time] = useState('');
+    const [loading,setLoading] = useState(false);
 
     useFocusEffect(useCallback(() => {
+        setLoading(true);
         const source = axios.CancelToken.source();
-        const loadData = async () => {
-            try{
-                const response = await axios.get("http://192.168.43.171:5000/income/show_income/daily",{cancelToken : source.token});
-                setData(response.data);
-                setDaily_Time(response.data[0].date);
-
-            }catch (error) {
-                if(axios.isCancel(error)){
-                    console.log("Response has been cancel TableList")
-                }else{
-                    throw error
+        checkUserSignedIn(navigation)
+        .then(res => {
+            const loadData = async () => {
+                try{
+                    const response = await axios.get(`http://192.168.43.171:5000/income/show_income/daily/${res.user._id}`,{cancelToken : source.token});
+                    setData(response.data);
+                    setLoading(false);
+                }catch (error) {
+                    setLoading(false);
+                    if(axios.isCancel(error)){
+                        console.log("Response has been cancel TableList")
+                    }else{
+                        Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
+                    }
                 }
-            }
-        };
-        loadData();
+            };
+            loadData();
+        })
+        .catch(err => {
+            setLoading(false);
+            clear_AsyncStorage(navigation);
+        })
         return () => {
             source.cancel();
+            setData([]);
         }
     },[]));
 
@@ -86,6 +96,7 @@ const Daily = () => {
 
     return (
         <View style = {styles.container}>
+            <Loading loading = {loading}/>
             {
                 data.length ? 
                 <View style = {styles.top_header_invoice}>

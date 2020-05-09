@@ -2,6 +2,7 @@ const Income = require('../Models/income')
 
 exports.add_income = (req,res) => {
     Income.create({
+        user_id : req.body.user_id,
         date : req.body.date,
         code : req.body.code,
         list_income : req.body.list_income,
@@ -17,6 +18,7 @@ exports.add_income = (req,res) => {
 }
 
 exports.show_income = (req,res) => {
+    var user_id = req.params.user_id;
     var type = req.params.type;
     var start = new Date();
     start.setHours(0,0,0,0);
@@ -28,7 +30,8 @@ exports.show_income = (req,res) => {
         Income.find({
             date : {
                 $gte: start, $lt: end
-            }
+            },
+            user_id : user_id
         })
         .sort({date : -1})
         .then(response => {
@@ -42,7 +45,7 @@ exports.show_income = (req,res) => {
         d.setDate(d.getDate()-7);
         
         Income.aggregate([
-            // {$match : {"date" : {$gt : d}}},
+            {$match : {user_id : user_id}},
             {$group : {_id : {
                 date : "$date",
                 list_income : "$list_income"

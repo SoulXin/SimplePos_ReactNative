@@ -1,5 +1,5 @@
 import {createStackNavigator} from 'react-navigation-stack'
-import Index from '../Components/Inventory/Index'
+import Index from '../../Components/Inventory/Index'
 
 const screens = {
     Inventory : {

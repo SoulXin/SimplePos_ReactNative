@@ -5,29 +5,44 @@ import axios from 'axios'
 import { useFocusEffect } from 'react-navigation-hooks'
 import {handleSearch} from './Components/Functions/MotorcycleList'
 import styles from './Components/Styles/MotorcycleList'
+import { checkUserSignedIn,clear_AsyncStorage } from '../../Global_Functions/Functions';
+import Loading from '../Modal_Loading/Loading'
 
 const MotorcycleList = ({navigation}) => {
     const [data,setData] = useState([]);
     const [fullData,setFullData] = useState([]);
+    const [loading,setLoading] = useState(false);
 
     useFocusEffect(useCallback(() => {
+        setLoading(true);
         const source = axios.CancelToken.source();
-        const loadData = async () => {
-            try{
-                const response = await axios.get("http://192.168.43.171:5000/motorcycle/show_motorcycle",{cancelToken : source.token});
-                setData(response.data)
-                setFullData(response.data)
-            }catch (error) {
-                if(axios.isCancel(error)){
-                    console.log("Response has been cancel TableList")
-                }else{
-                    throw error
+        checkUserSignedIn(navigation)
+        .then(res => {            
+            const loadData = async () => {
+                try{
+                    const response = await axios.get(`http://192.168.43.171:5000/motorcycle/show_motorcycle/${res.user._id}`,{cancelToken : source.token});
+                    setData(response.data);
+                    setFullData(response.data);
+                    setLoading(false);
+                }catch (error) {
+                    setLoading(false);
+                    if(axios.isCancel(error)){
+                        console.log("Response has been cancel TableList")
+                    }else{
+                        Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
+                    }
                 }
-            }
-        };
-        loadData();
+            };
+            loadData();
+        })
+        .catch(err => {
+            setLoading(false);
+            clear_AsyncStorage(navigation);
+        })
         return () => {
             source.cancel();
+            setData([]);
+            setFullData([]);
         }
     },[]));
 
@@ -54,6 +69,7 @@ const MotorcycleList = ({navigation}) => {
 
     return (
         <Container>
+            <Loading loading = {loading}/>
             <Header searchBar style = {styles.header_searchbar}>
                 <Item style = {styles.column_searchbox}>
                     <Input placeholder="Cari Tipe Kereta" onChangeText = {(text) => handleSearch(text,fullData,setData)}/>

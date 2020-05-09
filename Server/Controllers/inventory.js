@@ -1,8 +1,10 @@
 const Product = require('../Models/product')
 
 exports.show_inventory = (req,res) => {
+    var user_id = req.params.user_id
     Product.find({
-        qty : {$lt : 3}
+        qty : {$lt : 3},
+        user_id : user_id
     })
     .then(response => {
         res.json(response)

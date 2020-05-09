@@ -1,6 +1,10 @@
 const mongoose = require("../Database/db");
 
 const employee_workSchema = {
+    user_id : {
+        type : String,
+        required : true
+    },
     name : {
         type : String,
         required : true,

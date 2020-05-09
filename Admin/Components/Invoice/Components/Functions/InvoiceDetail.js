@@ -82,7 +82,7 @@ import axios from 'axios'
         setTemp_qty(0);
     })
     .catch(error => {
-        console.log(error)
+        Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
     })
   }
   
@@ -114,7 +114,7 @@ import axios from 'axios'
         setTemp_qty(0);
     })
     .catch(error => {
-        console.log(error)
+        Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
     })
   }
   
@@ -142,7 +142,8 @@ import axios from 'axios'
     navigation.navigate('Home');
   }
   
-  const handleComplete = (
+  const handleComplete = async (
+    user_id,
     bk,
     mechanic,
     data_Product,
@@ -150,7 +151,9 @@ import axios from 'axios'
     date_order,
     work_list,
     invoice_id,
-    navigation) => {
+    navigation,
+    setLoading) => {
+    setLoading(true);
     var temp_income = [];
     const data_invoice = {
         bk : bk,
@@ -160,11 +163,13 @@ import axios from 'axios'
     }
     
     const data = {
+        user_id : user_id,
         date_order : date_order.substring(0,10),
         order : data_invoice
     }
   
     const data_employee = {
+        user_id : user_id,
         name : mechanic,
         date_work : date_order.substring(0,10),
         work_list : work_list
@@ -178,68 +183,29 @@ import axios from 'axios'
     }, 0);
 
     const data_income = {
+        user_id : user_id,
         date : date_order.substring(0,10),
         code : bk,
         list_income : data_Product,
         income : sum_total_income
     }
-
-    axios({
-        method : 'DELETE',
-        url : `http://192.168.43.171:5000/invoice/delete_invoice/${invoice_id}`
-    })
-    .then(response => {
-        axios({
-            method : 'POST',
-            url : 'http://192.168.43.171:5000/sales/add_sales',
-            data : data
+    try{
+        await axios.delete(`http://192.168.43.171:5000/invoice/delete_invoice/${invoice_id}`)
+        await axios.post('http://192.168.43.171:5000/sales/add_sales', data)
+        if(data_employee.name !== "Bawa Pulang"){
+            await axios.post('http://192.168.43.171:5000/employee_work/add_employee_work',data_employee)
+        }
+        await axios.post('http://192.168.43.171:5000/income/add_income',data_income)
+        await data.order.product.map(list => {
+            const data_update_qty = {
+                qty : list.product_qty - list.qty
+            }
+            axios.put(`http://192.168.43.171:5000/product/update_qty/${list.id}`,data_update_qty)
         })
-        .then(response => {
-            axios({
-                method : 'POST',
-                url : 'http://192.168.43.171:5000/employee_work/add_employee_work',
-                data : data_employee
-            })
-            .then(response => {
-                axios({
-                    method : 'POST',
-                    url : 'http://192.168.43.171:5000/income/add_income',
-                    data : data_income
-                })
-                .then(response => {
-                    data.order.product.map(list => {
-                        const data_update_qty = {
-                            qty : list.product_qty - list.qty
-                        }
-                        axios({
-                            method : 'PUT',
-                            url : `http://192.168.43.171:5000/product/update_qty/${list.id}`,
-                            data : data_update_qty
-                        })
-                        .then(response => {
-                            navigation.navigate('InvoiceList');
-                        })
-                        .catch(error => {
-                            console.log(error)
-                        })
-                    })
-                })
-                .catch(error => {
-                    console.log(error)
-                })
-                
-            })
-            .catch(error => {
-                console.log(error)
-            })
-        })
-        .catch(error => {
-            console.log(error);
-        })
-    })
-    .catch(error => {
-        console.log(error);
-    })
+        return navigation.navigate('InvoiceList');
+    }catch(error){
+        Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
+    }
   }
   
   export {

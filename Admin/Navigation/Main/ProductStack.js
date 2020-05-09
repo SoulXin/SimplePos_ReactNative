@@ -1,7 +1,7 @@
 import {createStackNavigator} from 'react-navigation-stack'
-import ProductList from '../Components/Product/ProductList'
-import ProductForm from '../Components/Product/ProductForm'
-import ProductDetail from '../Components/Product/ProductDetail'
+import ProductList from '../../Components/Product/ProductList'
+import ProductForm from '../../Components/Product/ProductForm'
+import ProductDetail from '../../Components/Product/ProductDetail'
 
 const screens = {
     ProductList : {

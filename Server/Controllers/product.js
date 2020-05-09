@@ -2,6 +2,7 @@ const Product = require('../Models/product')
 
 exports.add_product = (req,res) => {
     Product.create({
+        user_id : req.body.user_id,
         product_name : req.body.product_name,
         product_capital : Number(req.body.product_capital),
         product_price : Number(req.body.product_price),
@@ -17,8 +18,11 @@ exports.add_product = (req,res) => {
 }
 
 exports.show_product = (req,res) => {
+    var user_id = req.params.user_id;
+
     Product.find({
-        qty : {$gte : 3}
+        qty : {$gte : 3},
+        user_id : user_id
     })
     .then(response => {
         res.json(response)

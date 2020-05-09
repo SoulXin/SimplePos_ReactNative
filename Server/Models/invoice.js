@@ -1,6 +1,10 @@
 const mongoose = require("../Database/db");
 
 const invoiceSchema = {
+    user_id : {
+        type : String,
+        required : true
+    },
     bk : {
         type : String,
         required : true

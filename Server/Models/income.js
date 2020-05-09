@@ -1,6 +1,10 @@
 const mongoose = require("../Database/db");
 
 const incomeSchema = {
+    user_id : {
+        type : String,
+        required : true
+    },
     date : {
         type : Date,
         required : true,

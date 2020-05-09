@@ -15,26 +15,39 @@ const handleModalDetail = (id,index,dataContext,setTemp_Detail,setPay_Mechanic,s
     setIndex(index);
 }
 
-const handleAdd = (bk,mechanic,dataContext,dispatch,setBK,setMechanic,navigation,Alert) => {
-    const data = {
-        bk : bk,
-        mechanic : mechanic,
-        product : dataContext.temp_data_invoice
+const handleAdd = (user_id,bk,mechanic,dataContext,dispatch,setBK,setMechanic,navigation,Alert,setLoading) => {
+    setLoading(true);
+    if(bk){
+        if(mechanic.length > 0 && mechanic !== "Kosong"){
+            const data = {
+                user_id : user_id,
+                bk : bk,
+                mechanic : mechanic,
+                product : dataContext.temp_data_invoice
+            }
+            axios({
+                method : 'POST',
+                url : `http://192.168.43.171:5000/invoice/add_invoice`,
+                data : data
+            })
+            .then(response => {
+                setLoading(false);
+                dispatch({type : 'CLEAR_TEMP_DATA_INVOICE'});
+                setBK('');
+                setMechanic('');
+                Alert.alert('Pemberitahuan','Bon Berhasil Di Buat',[{text : 'OK',onPress : () => navigation.navigate('InvoiceList')}]);
+            })
+            .catch(error => {
+                Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
+            })
+        }else{
+            setLoading(false);
+            Alert.alert('Pemberitahuan','Mekanik Tidak Boleh Kosong,Jika Tidak Ada Mekanik Maka Pilihlah \'Bawa Pulang \' ',[{text : 'OK'}])
+        }
+    }else{
+        setLoading(false);
+        Alert.alert('Pemberitahuan','BK Kereta Tidak Boleh Kosong',[{text : 'OK'}])
     }
-    axios({
-        method : 'POST',
-        url : `http://192.168.43.171:5000/invoice/add_invoice`,
-        data : data
-    })
-    .then(response => {
-        dispatch({type : 'CLEAR_TEMP_DATA_INVOICE'});
-        setBK('');
-        setMechanic('');
-        Alert.alert('Pemberitahuan','Bon Berhasil Di Buat',[{text : 'OK',onPress : () => navigation.navigate('InvoiceList')}]);
-    })
-    .catch(error => {
-        console.log(error)
-    })
 }
 
 const handleDelete = (setShow_Modal_Detail,setTemp_qty) => {

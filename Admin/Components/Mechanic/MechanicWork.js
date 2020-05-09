@@ -5,33 +5,48 @@ import { useFocusEffect } from 'react-navigation-hooks'
 import {Button, ListItem, Body, Right, Text } from 'native-base';
 import {handleShowModalDetail,handleComplete} from './Components/Functions/MechanicWork'
 import styles from './Components/Styles/MechanicWork'
-import { formatMoney } from '../../Global_Functions/Functions'
- 
-const MechanicWork = () => {
+import { formatMoney, checkUserSignedIn, clear_AsyncStorage } from '../../Global_Functions/Functions'
+import Loading from '../Modal_Loading/Loading'
+
+const MechanicWork = ({navigation}) => {
+    const [id,setId] = useState('');
+    const [user_Id,setUser_Id] = useState('');
     const [data,setData] = useState([]);
     const [showModal_Detail,setShow_Modal_Detail] = useState(false);
     const [temp_data,setTemp_Data] = useState([]);
     const [name,setName] = useState('');
     const [date,setDate] = useState('');
-    
+    const [loading,setLoading] = useState(false);
+
     useFocusEffect(useCallback(() => {
+        setLoading(true);
         const source = axios.CancelToken.source();
-        const loadData = async () => {
-            try{
-                const response = await axios.get("http://192.168.43.171:5000/employee_work/show_employee_work",{cancelToken : source.token});
-                setData(response.data);
-                console.log(response.data)
-            }catch (error) {
-                if(axios.isCancel(error)){
-                    console.log("Response has been cancel TableList")
-                }else{
-                    throw error
+        checkUserSignedIn(navigation)
+        .then(res => {
+            setUser_Id(res.user._id);
+            const loadData = async () => {
+                try{
+                    const response = await axios.get(`http://192.168.43.171:5000/employee_work/show_employee_work/${res.user._id}`,{cancelToken : source.token});
+                    setData(response.data);
+                    setLoading(false);
+                }catch (error) {
+                    setLoading(false);
+                    if(axios.isCancel(error)){
+                        console.log("Response has been cancel TableList")
+                    }else{
+                        Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
+                    }
                 }
-            }
-        };
-        loadData();
+            };
+            loadData();
+        })
+        .catch(err => {
+            setLoading(false);
+            clear_AsyncStorage(navigation);
+        })
         return () => {
             source.cancel();
+            setData([]);
         }
     },[]));
 
@@ -47,12 +62,12 @@ const MechanicWork = () => {
         return (
             <ListItem avatar>
                 <Body>
-                    <Text>{item._id}</Text>
+                    <Text>{item.name}</Text>
                     <Text>Total : Rp.{formatMoney(sum_total)}</Text>
                     <Text>Bersih : Rp{formatMoney(net_profit)}</Text>
                 </Body>
                 <Right style = {styles.row}>
-                    <Button style = {styles.button_detail} onPress = {() => handleShowModalDetail(item,setShow_Modal_Detail,setTemp_Data,setName,setDate)}>
+                    <Button style = {styles.button_detail} onPress = {() => handleShowModalDetail(item,setShow_Modal_Detail,setTemp_Data,setId,setName,setDate)}>
                         <Text>Detail</Text>
                     </Button>
                 </Right>
@@ -72,6 +87,7 @@ const MechanicWork = () => {
     
     return (
         <View  style = {styles.container}>
+            <Loading loading = {loading}/>
             <Modal visible = {showModal_Detail}>
                 <View style = {styles.container_column}>
                     <View style = {{flex : 8}}>
@@ -88,7 +104,7 @@ const MechanicWork = () => {
                                     </TouchableOpacity>
                                 </View>
                                 <View style = {{flex : 1}}>
-                                    <TouchableOpacity style = {styles.button_complete} onPress = {() => handleComplete(data,temp_data,name,date,setShow_Modal_Detail,setName,setData)}>
+                                    <TouchableOpacity style = {styles.button_complete} onPress = {() => handleComplete(id,user_Id,data,temp_data,name,date,setShow_Modal_Detail,setName,setData,setLoading)}>
                                         <Text style = {{textAlign : 'center'}}>Selesai Pekerjaan</Text>
                                     </TouchableOpacity>
                                 </View>

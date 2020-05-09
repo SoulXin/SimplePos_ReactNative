@@ -3,17 +3,27 @@ import { View, Text,TextInput, Alert,Picker,ScrollView,TouchableOpacity } from '
 import { useFocusEffect } from 'react-navigation-hooks'
 import {handleAdd} from './Components/Functions/MechanicForm'
 import styles from './Components/Styles/MechanicForm'
+import { checkUserSignedIn,clear_AsyncStorage } from '../../Global_Functions/Functions'
+import Loading from '../Modal_Loading/Loading'
 
 const MechaniceForm = ({navigation}) => {
+    const [user_Id,setUser_Id] = useState('');
     const [name,setName] = useState('');
     const [age,setAge] = useState('');
     const [religion,setReligion] = useState('Islam');
     const [address,setAddress] = useState('');
     const [districts,setDistricts] = useState('');
     const [phone_number,setPhone_Number] = useState('');
+    const [loading,setLoading] = useState(false);
 
     useFocusEffect(useCallback(() => {
-
+        checkUserSignedIn(navigation)
+        .then(res => {
+            setUser_Id(res.user._id)
+        })
+        .catch(err => {
+            clear_AsyncStorage(navigation);
+        })
         return () => {
             setName('');
             setAge('');
@@ -26,6 +36,7 @@ const MechaniceForm = ({navigation}) => {
 
     return (
         <View style = {styles.container}>
+            <Loading loading = {loading}/>
             <ScrollView>
                 <View style = {{marginTop : 20}}>
                     <Text  style = {styles.title_text}>Nama</Text>
@@ -111,7 +122,7 @@ const MechaniceForm = ({navigation}) => {
 
             <View style = {styles.container_buttom}>
                 <View style = {{width : '100%'}}>
-                    <TouchableOpacity style = {styles.button_add} onPress = {() => handleAdd(name,age,religion,address,districts,phone_number,setName,setAge,setReligion,setAddress,setDistricts,setPhone_Number,Alert,navigation)}>
+                    <TouchableOpacity style = {styles.button_add} onPress = {() => handleAdd(user_Id,name,age,religion,address,districts,phone_number,setName,setAge,setReligion,setAddress,setDistricts,setPhone_Number,setLoading,Alert,navigation)}>
                         <Text style = {{textAlign : 'center'}}>Tambah</Text>
                     </TouchableOpacity>
                 </View>

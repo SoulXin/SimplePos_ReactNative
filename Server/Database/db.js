@@ -3,7 +3,8 @@ const dbPath = "mongodb://simplepos:simplepos@cluster0-shard-00-00-phtbm.mongodb
 mongoose.connect(dbPath, {
     useNewUrlParser: true,
     useUnifiedTopology : true,
-    useFindAndModify : false
+    useFindAndModify : false,
+    useCreateIndex : true
 });
 const db = mongoose.connection;
 db.on("error", () => {

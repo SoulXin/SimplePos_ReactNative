@@ -5,7 +5,7 @@ import {Context} from '../../Context/Context'
 import { useFocusEffect } from 'react-navigation-hooks'
 import axios from 'axios'
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import {formatRupiah,formatMoney} from '../../Global_Functions/Functions'
+import {formatRupiah,formatMoney, checkUserSignedIn,clear_AsyncStorage} from '../../Global_Functions/Functions'
 import {
     handleNavigation,
     handleModalDetail,
@@ -16,8 +16,10 @@ import {
     handleDecrement
 } from './Components/Functions/InvoiceForm'
 import styles from './Components/Styles/InvoiceForm'
+import Loading from '../Modal_Loading/Loading'
 
 const InvoiceForm = ({navigation}) => {
+    const [user_Id,setUser_Id] = useState('');
     const [bk,setBK] = useState('');
     const [mechanic,setMechanic] = useState('');
     const [showModalDetail,setShow_Modal_Detail] = useState(false);
@@ -27,31 +29,44 @@ const InvoiceForm = ({navigation}) => {
     const [temp_qty,setTemp_qty] = useState(0);
     const [employee,setEmployee] = useState([]);
     const [pay_mechanic,setPay_Mechanic] = useState(0);
+    const [loading,setLoading] = useState(false);
 
     useFocusEffect(useCallback(() => {
+        setLoading(true);
         const source = axios.CancelToken.source();
-        const loadData = async () => {
-            try{
-                const response = await axios.get("http://192.168.43.171:5000/employee/show_employee",{cancelToken : source.token});
-                setEmployee(response.data);
-
-            }catch (error) {
-                if(axios.isCancel(error)){
-                    console.log("Response has been cancel TableList")
-                }else{
-                    throw error
+        checkUserSignedIn(navigation)
+        .then(res => {
+            setUser_Id(res.user._id);
+            const loadData = async () => {
+                try{
+                    const response = await axios.get(`http://192.168.43.171:5000/employee/show_employee/${res.user._id}`,{cancelToken : source.token});
+                    setEmployee(response.data);
+                    setLoading(false);
+                }catch (error) {
+                    setLoading(false);
+                    if(axios.isCancel(error)){
+                        console.log("Response has been cancel TableList")
+                    }else{
+                        Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
+                    }
                 }
-            }
-        };
-        loadData();
+            };
+            loadData();
+        })
+        .catch(err => {
+            setLoading(false);
+            clear_AsyncStorage(navigation);
+        })
         return () => {
+            dispatch({type : 'CLEAR_TEMP_DATA_INVOICE'});
             source.cancel();
+            setEmployee([]);
         }
     },[]));
 
     const viewProductInvoice = () => dataContext.temp_data_invoice.length ? dataContext.temp_data_invoice.map((list,index) => {
         return(
-            <TouchableOpacity disabled = {showModalDetail} style = {styles.table_child_row} key = {index} onPress = {() => handleModalDetail(list.id,index,dataContext,setTemp_Detail,setPay_Mechanic,setShow_Modal_Detail,setIndex)}>
+            <TouchableOpacity disabled = {showModalDetail} style = {index % 2 == 0 ? styles.table_child_row_1 : styles.table_child_row_2} key = {index} onPress = {() => handleModalDetail(list.id,index,dataContext,setTemp_Detail,setPay_Mechanic,setShow_Modal_Detail,setIndex)}>
                 <Text style = {styles.table_name_cell}> {list.product_name}</Text>
                 <Text style = {styles.table_name_cell}> {list.qty}</Text>
                 <Text style = {styles.table_name_cell}>Rp. {formatMoney(list.product_price)}</Text>
@@ -89,6 +104,7 @@ const InvoiceForm = ({navigation}) => {
 
     return (
         <View style = {styles.container}>
+            <Loading loading = {loading}/>
             <Modal visible = {showModalDetail} transparent>
                 <View style = {styles.container_modal_detail}>
                     <View style = {styles.container_box_modal_detail}>
@@ -116,11 +132,12 @@ const InvoiceForm = ({navigation}) => {
                         <View style = {styles.row}>
                             <TextInput
                                 style = {styles.text_input_pay_mechanic}
-                                value = {pay_mechanic ? pay_mechanic.toString() : '0'}
+                                value = {pay_mechanic ? pay_mechanic.toString() : ""}
                                 onChangeText = {(e) => formatRupiah(e,'Rp. ',setPay_Mechanic)}
+                                onFocus = {() => setPay_Mechanic("")}
                             />
 
-                            <TouchableOpacity style = {styles.button_reset_pay_mechanic} onPress = {() => setPay_Mechanic('0')}>
+                            <TouchableOpacity style = {styles.button_reset_pay_mechanic} onPress = {() => setPay_Mechanic("")}>
                                 <Icon name = "undo" style = {{fontSize : 20}} />
                             </TouchableOpacity>
                         </View>
@@ -149,7 +166,8 @@ const InvoiceForm = ({navigation}) => {
                         selectedValue = {mechanic}
                         onValueChange = {(value) => setMechanic(value)}
                     >
-                        <Picker label = "Tidak Ada" value = "Tidak Ada"/>
+                        <Picker label = "Kosong" value = "Kosong"/>
+                        <Picker label = "Bawa Pulang" value = "Bawa Pulang"/>
                         {viewEmployee()}
                     </Picker>
                 </View>
@@ -182,7 +200,7 @@ const InvoiceForm = ({navigation}) => {
                         </TouchableOpacity>
                     </View>
                     <View style = {{flex : 1}}>
-                        <TouchableOpacity style = {styles.button_add_invoice} onPress = {() => handleAdd(bk,mechanic,dataContext,dispatch,setBK,setMechanic,navigation,Alert)}>
+                        <TouchableOpacity style = {styles.button_add_invoice} onPress = {() => handleAdd(user_Id,bk,mechanic,dataContext,dispatch,setBK,setMechanic,navigation,Alert,setLoading)}>
                             <Text style = {{textAlign : 'center'}}>Buka Bon</Text>
                         </TouchableOpacity>
                     </View>

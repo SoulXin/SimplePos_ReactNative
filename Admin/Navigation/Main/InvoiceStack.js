@@ -1,7 +1,7 @@
 import {createStackNavigator} from 'react-navigation-stack'
-import InvoiceList from '../Components/Invoice/InvoiceList'
-import InvoiceForm from '../Components/Invoice/InvoiceForm'
-import InvoiceDetail from '../Components/Invoice/InvoiceDetail'
+import InvoiceList from '../../Components/Invoice/InvoiceList'
+import InvoiceForm from '../../Components/Invoice/InvoiceForm'
+import InvoiceDetail from '../../Components/Invoice/InvoiceDetail'
 
 const screens = {
     InvoiceList : {

@@ -2,6 +2,7 @@ const Sales = require('../Models/sales')
 
 exports.add_sales = (req,res) => {
     Sales.create({
+        user_id : req.body.user_id,
         date_order : req.body.date_order,
         order : req.body.order
     })
@@ -15,6 +16,7 @@ exports.add_sales = (req,res) => {
 }
 
 exports.show_sales = (req,res) => {
+    var user_id = req.params.user_id;
     var type = req.params.type;
     var start = new Date();
     start.setHours(0,0,0,0);
@@ -26,7 +28,8 @@ exports.show_sales = (req,res) => {
         Sales.find({
             date_order : {
                 $gte: start, $lt: end
-            }
+            },
+            user_id : user_id
         })
         .sort({date_order : -1})
         .then(response => {
@@ -40,7 +43,7 @@ exports.show_sales = (req,res) => {
         d.setDate(d.getDate()-7);
         
         Sales.aggregate([
-            // {$match : {"date_order" : {$gt : d}}},
+            {$match : {user_id : user_id}},
             {$group : {_id : {
                 date_order : "$date_order",
                 order : "$order"

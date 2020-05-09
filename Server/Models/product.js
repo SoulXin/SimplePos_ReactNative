@@ -1,6 +1,10 @@
 const mongoose = require("../Database/db");
 
 const productSchema = {
+    user_id : {
+        type : String,
+        required : true
+    },
     product_name : {
         type : String,
         required : true

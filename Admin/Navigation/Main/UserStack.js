@@ -1,9 +1,9 @@
 import {createStackNavigator} from 'react-navigation-stack'
-import Home from '../Components/Dashboard/Home'
+import User from '../../Components/User/Index'
 
 const screens = {
-    Home : {
-        screen : Home,
+    User : {
+        screen : User,
         navigationOptions : () => {
             return {
                 headerShown : false
@@ -12,6 +12,6 @@ const screens = {
     }
 }
 
-const HomeStack = createStackNavigator(screens)
+const UserStack = createStackNavigator(screens)
 
-export default HomeStack
+export default UserStack

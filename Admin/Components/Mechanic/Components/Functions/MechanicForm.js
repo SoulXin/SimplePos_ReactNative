@@ -1,7 +1,9 @@
 import axios from 'axios'
 
-const handleAdd = (name,age,religion,address,districts,phone_number,setName,setAge,setReligion,setAddress,setDistricts,setPhone_Number,Alert,navigation) => {
+const handleAdd = (user_id,name,age,religion,address,districts,phone_number,setName,setAge,setReligion,setAddress,setDistricts,setPhone_Number,setLoading,Alert,navigation) => {
+    setLoading(true);
     const data = {
+        user_id : user_id,
         name : name,
         age : parseInt(age),
         religion : religion,
@@ -22,10 +24,12 @@ const handleAdd = (name,age,religion,address,districts,phone_number,setName,setA
         setAddress('');
         setDistricts('');
         setPhone_Number('');
+        setLoading(false);
         Alert.alert('Pemberitahuan','Mekanik Berhasil Di Tambahkan',[{text : 'OK', onPress : () => navigation.navigate('MechaniceList')}]);
     })
     .catch(error => {
-        console.log(error)
+        setLoading(false);
+        Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
     })
 }
 

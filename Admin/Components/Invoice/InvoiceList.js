@@ -3,9 +3,10 @@ import { View,FlatList,Modal,TouchableOpacity } from 'react-native'
 import axios from 'axios'
 import { useFocusEffect } from 'react-navigation-hooks'
 import { Container, List, Button, ListItem, Body, Right,Text } from 'native-base';
-import {formatMoney} from '../../Global_Functions/Functions'
+import {formatMoney, checkUserSignedIn, clear_AsyncStorage} from '../../Global_Functions/Functions'
 import { handleShowModalDelete,handleDelete } from './Components/Functions/InvoiceList'
 import styles from './Components/Styles/InvoiceList'
+import Loading from '../Modal_Loading/Loading'
 
 const InvoiceList = ({navigation}) => {
     // Data
@@ -18,23 +19,36 @@ const InvoiceList = ({navigation}) => {
     // Modal
     const [showModalDelete,setShowModalDelete] = useState(false);
 
+    const [loading,setLoading] = useState(false);
+
     useFocusEffect(useCallback(() => {
+        setLoading(true);
         const source = axios.CancelToken.source();
-        const loadData = async () => {
-            try{
-                const response = await axios.get("http://192.168.43.171:5000/invoice/show_invoice",{cancelToken : source.token});
-                setData(response.data);
-            }catch (error) {
-                if(axios.isCancel(error)){
-                    console.log("Response has been cancel TableList")
-                }else{
-                    throw error
+        checkUserSignedIn(navigation)
+        .then(res => {
+            const loadData = async () => {
+                try{
+                    const response = await axios.get(`http://192.168.43.171:5000/invoice/show_invoice/${res.user._id}`,{cancelToken : source.token});
+                    setData(response.data);
+                    setLoading(false);
+                }catch (error) {
+                    setLoading(false);
+                    if(axios.isCancel(error)){
+                        console.log("Response has been cancel TableList")
+                    }else{
+                        Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
+                    }
                 }
-            }
-        };
-        loadData();
+            };
+            loadData();
+        })
+        .catch(err => {
+            setLoading(false);
+            clear_AsyncStorage(navigation)
+        })
         return () => {
             source.cancel();
+            setData([]);
         }
     },[]));
 
@@ -88,6 +102,7 @@ const InvoiceList = ({navigation}) => {
 
     return (
         <Container>
+            <Loading loading = {loading}/>
             <Modal visible = {showModalDelete} transparent>
                 <View style = {styles.container_modal_delete}>
                     <View style = {styles.container_box_modal_delete}>

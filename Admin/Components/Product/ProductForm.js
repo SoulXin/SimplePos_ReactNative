@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState,useCallback } from 'react'
 import { View, Text,TextInput,Picker, Alert ,Modal,TouchableOpacity,ScrollView,TouchableWithoutFeedback,Keyboard} from 'react-native'
 import axios from 'axios'
 import {
@@ -9,10 +9,13 @@ import {
     handleFilterSelectionType,
     handleCloseModalShow
 } from './Components/Functions/ProductForm'
-import {formatRupiah} from '../../Global_Functions/Functions'
+import {formatRupiah,checkUserSignedIn, clear_AsyncStorage} from '../../Global_Functions/Functions'
+import { useFocusEffect } from 'react-navigation-hooks'
 import styles from './Components/Styles/ProductForm'
+import Loading from '../Modal_Loading/Loading'
 
 const ProductForm = ({navigation}) => {
+    const [user_Id,setUser_Id] = useState('');
     const [name,setName] = useState('');
     const [capital,setCapital] = useState(0);
     const [price,setPrice] = useState(0);
@@ -28,29 +31,39 @@ const ProductForm = ({navigation}) => {
     const [filterSelectionType,setFilterSelectionType] = useState('');
 
     const [modalShow,setModalShow] = useState(false);
+    const [loading,setLoading] = useState(false);
 
-   useEffect(() => {
+   useFocusEffect(useCallback(() => {
+        setLoading(true);
         const source = axios.CancelToken.source();
-        const loadData = async () => {
-            try{
-                const response = await axios.get("http://192.168.43.171:5000/motorcycle/show_motorcycle",{cancelToken : source.token});
-                setDataType(response.data);
-                setTempDataType(response.data);
-
-            }catch (error) {
-                if(axios.isCancel(error)){
-                    console.log("Response has been cancel TableList")
-                }else{
-                    throw error
+        checkUserSignedIn(navigation)
+        .then(res => {
+            setUser_Id(res.user._id);
+            const loadData = async () => {
+                try{
+                    const response = await axios.get(`http://192.168.43.171:5000/motorcycle/show_motorcycle/${res.user._id}`,{cancelToken : source.token});
+                    setDataType(response.data);
+                    setTempDataType(response.data);
+                    setLoading(false);
+                }catch (error) {
+                    setLoading(false);
+                    if(axios.isCancel(error)){
+                        console.log("Response has been cancel TableList")
+                    }else{
+                        Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
+                    }
                 }
-            }
-        };
-        loadData();
-
-       return () => {
-        source.cancel();
-       }
-   }, [])
+            };
+            loadData();
+        })
+        .catch(error => {
+            setLoading(false);
+            clear_AsyncStorage(navigation);
+        })
+        return () => {
+            source.cancel();
+        }
+    },[]));
 
     const viewType = () => dataType.map((list,index) => {
         return (
@@ -90,6 +103,7 @@ const ProductForm = ({navigation}) => {
     
     return (
         <View style = {styles.container}>
+            <Loading loading = {loading}/>
             <Modal visible = {modalShow}>
                 <View style = {styles.container_modal}>
                     <View style = {styles.first_cell}>
@@ -205,7 +219,7 @@ const ProductForm = ({navigation}) => {
             </View>
 
             <View style = {styles.container_button}>
-                <TouchableOpacity style = {styles.button_add} onPress = {() => handleSubmit(name,capital,price,selectionType,qty,Alert,navigation)}>
+                <TouchableOpacity style = {styles.button_add} onPress = {() => handleSubmit(user_Id,name,capital,price,selectionType,qty,Alert,navigation,setLoading)}>
                     <Text style = {styles.button_text}>Tambah Produk</Text>
                 </TouchableOpacity>
             </View>

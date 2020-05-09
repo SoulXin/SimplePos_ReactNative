@@ -2,14 +2,18 @@ import React,{useState} from 'react'
 import { View, Text,Picker, TextInput,TouchableWithoutFeedback,Keyboard,TouchableOpacity,Alert } from 'react-native'
 import { handleSubmit } from './Components/Functions/MotorcycleForm'
 import styles from './Components/Styles/MotorcycleForm'
+import { checkUserSignedIn } from '../../Global_Functions/Functions'
+import Loading from '../Modal_Loading/Loading'
 
 const MotorcycleForm = ({navigation}) => {
     const [name,setName] = useState('');
     const [year,setYear] = useState('');
     const [category,setCategory] = useState('Honda');
+    const [loading,setLoading] = useState(false);
 
     return (
         <View style = {styles.container}>
+            <Loading loading = {loading}/>
             <Text style = {styles.title_text}>Form Tambah Jenis Kereta Baru</Text>
             {/* Nama Kereta */}
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -52,7 +56,7 @@ const MotorcycleForm = ({navigation}) => {
             </View>
 
             <View style = {styles.row_bottom}>
-                <TouchableOpacity style = {styles.button_add} onPress = {() => handleSubmit(name,year,Alert,category,navigation)}>
+                <TouchableOpacity style = {styles.button_add} onPress = {() => handleSubmit(name,year,Alert,category,navigation,checkUserSignedIn,setLoading)}>
                     <Text style = {{textAlign : 'center',fontSize : 14}}>Tambah Kereta</Text>
                 </TouchableOpacity>
             </View>

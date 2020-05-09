@@ -5,30 +5,44 @@ import { useFocusEffect } from 'react-navigation-hooks'
 import {  Button, ListItem, Body, Right,Text } from 'native-base';
 import {handleShowModalUpdate,handleUpdate} from './Components/Functions'
 import styles from './Components/Styles'
+import { checkUserSignedIn, clear_AsyncStorage } from '../../Global_Functions/Functions'
+import Loading from '../Modal_Loading/Loading'
 
-const Index = () => {
+const Index = ({navigaiton}) => {
     const [data,setData] = useState([]);
     const [showModalUpdate,setShowModalUpdate] = useState(false);
     const [qty,setQty] = useState(0);
     const [temp_detail,setTemp_Detail] = useState('');
+    const [loading,setLoading] = useState(false);
 
     useFocusEffect(useCallback(() => {
+        setLoading(true);
         const source = axios.CancelToken.source();
-        const loadData = async () => {
-            try{
-                const response = await axios.get("http://192.168.43.171:5000/inventory/show_inventory",{cancelToken : source.token});
-                setData(response.data)
-            }catch (error) {
-                if(axios.isCancel(error)){
-                    console.log("Response has been cancel TableList")
-                }else{
-                    throw error
+        checkUserSignedIn(navigaiton)
+        .then(res => {
+            const loadData = async () => {
+                try{
+                    const response = await axios.get(`http://192.168.43.171:5000/inventory/show_inventory/${res.user._id}`,{cancelToken : source.token});
+                    setData(response.data);
+                    setLoading(false);
+                }catch (error) {
+                    setLoading(false);
+                    if(axios.isCancel(error)){
+                        console.log("Response has been cancel TableList")
+                    }else{
+                        Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
+                    }
                 }
-            }
-        };
-        loadData();
+            };
+            loadData();
+        })
+        .catch(err => {
+            setLoading(false);
+            clear_AsyncStorage(navigaiton);
+        })
         return () => {
             source.cancel();
+            setData([]);
         }
     },[]));
 
@@ -50,6 +64,7 @@ const Index = () => {
 
     return (
         <View>
+            <Loading loading = {loading}/>
             {/* Modal Update */}
             <Modal visible = {showModalUpdate} transparent>
                 <View style = {styles.container_modal}>
@@ -81,7 +96,7 @@ const Index = () => {
                             </View>
 
                             <View style = {styles.cell_row_bottom}>
-                                <TouchableOpacity  style = {styles.button_refresh} onPress = {() => handleUpdate(qty,temp_detail,data,setShowModalUpdate,setData)}>
+                                <TouchableOpacity  style = {styles.button_refresh} onPress = {() => handleUpdate(qty,temp_detail,data,setShowModalUpdate,setData,setLoading)}>
                                     <Text style = {styles.button_text}>Perbarui</Text>
                                 </TouchableOpacity>
                             </View>

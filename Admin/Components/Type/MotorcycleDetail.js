@@ -3,12 +3,14 @@ import { View, Text,Picker, TextInput,TouchableWithoutFeedback,Keyboard,Touchabl
 import { useFocusEffect } from 'react-navigation-hooks'
 import { handleUpdate,handleDelete } from './Components/Functions/MotorcycleDetails'
 import styles from './Components/Styles/MotorcycleDetail'
+import Loading from '../Modal_Loading/Loading'
 
 const MotorcycleDetail = ({navigation}) => {
     const [id,setId] = useState('');
     const [name,setName] = useState('');
     const [year,setYear] = useState('');
     const [category,setCategory] = useState('Honda');
+    const [loading,setLoading] = useState(false);
 
     useFocusEffect(useCallback(() => {
         setId(navigation.state.params._id);
@@ -23,6 +25,7 @@ const MotorcycleDetail = ({navigation}) => {
 
     return (
         <View style = {styles.container}>
+            <Loading loading = {loading}/>
             <Text style = {styles.title}>Form Detail Kereta</Text>
             {/* Nama Kereta */}
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -66,11 +69,11 @@ const MotorcycleDetail = ({navigation}) => {
             {/* Button */}
             <View style = {styles.container_button}> 
                 <View style = {styles.row}>
-                    <TouchableOpacity  style = {styles.button_delete} onPress = {() => handleDelete(id,Alert,navigation)}>
+                    <TouchableOpacity  style = {styles.button_delete} onPress = {() => handleDelete(id,Alert,navigation,setLoading)}>
                         <Text style = {styles.button_text}>Hapus Tipe Kereta</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style = {styles.button_update} onPress = {() => handleUpdate(id,name,category,year,Alert,navigation)}>
+                    <TouchableOpacity style = {styles.button_update} onPress = {() => handleUpdate(id,name,category,year,Alert,navigation,setLoading)}>
                         <Text style = {styles.button_text}>Simpan Perubahan</Text>
                     </TouchableOpacity>
                 </View>

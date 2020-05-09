@@ -6,7 +6,8 @@ const handleShowModalUpdate = (item,setShowModalUpdate,setTemp_Detail,setQty) =>
     setQty(item.qty);
 }
 
-const handleUpdate = (qty,temp_detail,data,setShowModalUpdate,setData) => {
+const handleUpdate = (qty,temp_detail,data,setShowModalUpdate,setData,setLoading) => {
+    setLoading(true);
     setShowModalUpdate(false);
     const data_qty = {
         qty : parseInt(qty)
@@ -20,13 +21,15 @@ const handleUpdate = (qty,temp_detail,data,setShowModalUpdate,setData) => {
             data : data_qty
         })
         .then(response => {
+            setLoading(false);
             if(qty > 2){
                 const temp_data = data.filter(list => list._id !== temp_detail._id);
                 setData(temp_data);
             }
         })
         .catch(error => {
-            console.log(error)
+            setLoading(false);
+            Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
         })
     }
 }

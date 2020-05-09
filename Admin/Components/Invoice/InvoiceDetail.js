@@ -6,7 +6,9 @@ import { useFocusEffect } from 'react-navigation-hooks'
 import {
     formatRupiah,
     formatMoney,
-    date
+    date,
+    checkUserSignedIn,
+    clear_AsyncStorage
 } from '../../Global_Functions/Functions'
 import {
     handleModalDetail,
@@ -19,9 +21,11 @@ import {
 } from './Components/Functions/InvoiceDetail';
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import styles from './Components/Styles/InvoiceDetail'
+import Loading from '../Modal_Loading/Loading'
 
 const InvoiceDetail = ({navigation}) => {
     const {bk,date_order,mechanic,invoice_id} = navigation.state.params;
+    const [user_Id,setUser_Id] = useState('');
     const [showModalDetail,setShow_Modal_Detail] = useState(false);
     const [temp_detail,setTemp_Detail] = useState('');
     const [temp_qty,setTemp_qty] = useState(0);
@@ -33,65 +37,81 @@ const InvoiceDetail = ({navigation}) => {
     const [pay_mechanic,setPay_Mechanic] = useState(0);
     const [total_pay_mechanic,setTotal_Pay_Mechanic] = useState(0);
     const [work_list,setWork_List] = useState([]);
+    const [loading,setLoading] = useState(false);
 
     useFocusEffect(useCallback(() => {
+        setLoading(true);
         let temp_total = [];
         let temp_total_pay_mechanic = [];
         let temp_work_list = [];
 
         const source = axios.CancelToken.source();
-        const loadData = async () => {
-            try{
-                const response = await axios.get(`http://192.168.43.171:5000/invoice/detail_invoice/${invoice_id}`,{cancelToken : source.token});
-                setData_Product(response.data.product);
-
-                response.data.product.map(list => {
-                    const data_work_list = {
-                        id : list.id,
-                        motorcycle_code : response.data.bk,
-                        product_name : list.product_name,
-                        pay_mechanic : list.pay_mechanic
+        checkUserSignedIn(navigation)
+        .then(res => {
+            setUser_Id(res.user._id);
+            const loadData = async () => {
+                try{
+                    const response = await axios.get(`http://192.168.43.171:5000/invoice/detail_invoice/${invoice_id}`,{cancelToken : source.token});
+                    setData_Product(response.data.product);
+                    await response.data.product.map(list => {
+                        const data_work_list = {
+                            id : list.id,
+                            motorcycle_code : response.data.bk,
+                            product_name : list.product_name,
+                            pay_mechanic : list.pay_mechanic
+                        }
+                        temp_work_list.push(data_work_list);
+                    });
+                    setWork_List(temp_work_list);
+    
+                    // Total
+                    await response.data.product.map((list,index) => {
+                        return temp_total.push(list.product_price * list.qty)
+                    });
+                    var sum_total = temp_total.reduce(function(a, b){
+                        return a + b;
+                    }, 0);
+                    // Mechanic
+                    await response.data.product.map((list,index) => {
+                        return temp_total_pay_mechanic.push(list.pay_mechanic)
+                    });
+                    var sum_total_pay_mechanic = temp_total_pay_mechanic.reduce(function(a, b){
+                        return a + b;
+                    }, 0);
+    
+                    setTotal(sum_total);
+                    setTotal_Pay_Mechanic(sum_total_pay_mechanic);
+                    setLoading(false);
+                }catch (error) {
+                    setLoading(false);
+                    if(axios.isCancel(error)){
+                        console.log("Response has been cancel TableList")
+                    }else{
+                        Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
                     }
-                    temp_work_list.push(data_work_list);
-                });
-                setWork_List(temp_work_list);
-
-                // Total
-                response.data.product.map((list,index) => {
-                    return temp_total.push(list.product_price * list.qty)
-                });
-                var sum_total = temp_total.reduce(function(a, b){
-                    return a + b;
-                }, 0);
-                // Mechanic
-                response.data.product.map((list,index) => {
-                    return temp_total_pay_mechanic.push(list.pay_mechanic)
-                });
-                var sum_total_pay_mechanic = temp_total_pay_mechanic.reduce(function(a, b){
-                    return a + b;
-                }, 0);
-
-                setTotal(sum_total);
-                setTotal_Pay_Mechanic(sum_total_pay_mechanic);
-            }catch (error) {
-                if(axios.isCancel(error)){
-                    console.log("Response has been cancel TableList")
-                }else{
-                    throw error
                 }
-            }
-        };
-        loadData();
+            };
+            loadData();
+        })
+        .catch(err => {
+            setLoading(false);
+            clear_AsyncStorage(navigation);
+        })
 
         return () => {
             source.cancel();
             temp_total = [];
+            temp_total_pay_mechanic = [];
+            temp_work_list = [];
+            setData_Product([]);
+            setTotal(0);
+            setTotal_Pay_Mechanic(0);
         }
     },[]));
 
     const viewProductInvoice = () => data_Product.map((list,index) => {
         return(
-            <TouchableOpacity disabled = {showModalDetail} style = {styles.row_child} key = {index} onPress = {() => handleModalDetail(list.id,index,data_Product,setPay_Mechanic,setTemp_Detail,setShow_Modal_Detail,setIndex)}>
+            <TouchableOpacity disabled = {showModalDetail} style = {index % 2 == 0 ? styles.row_child_1 : styles.row_child_2} key = {index} onPress = {() => handleModalDetail(list.id,index,data_Product,setPay_Mechanic,setTemp_Detail,setShow_Modal_Detail,setIndex)}>
                 <Text style = {styles.title_table_cell}> {list.product_name}</Text>
                 <Text style = {styles.title_table_cell}> {list.qty}</Text>
                 <Text style = {styles.title_table_cell}>Rp. {formatMoney(list.product_price)}</Text>
@@ -123,6 +143,7 @@ const InvoiceDetail = ({navigation}) => {
 
     return (
         <View style = {styles.container}>
+            <Loading loading = {loading}/>
             <Modal visible = {showModalDetail} transparent>
                 <View style = {styles.container_modal_detail}>
                     <View style = {styles.container_box_modal_detail}>
@@ -150,11 +171,12 @@ const InvoiceDetail = ({navigation}) => {
                         <View style = {styles.row}>
                             <TextInput
                                 style = {styles.text_input_pay_mechanic}
-                                value = {pay_mechanic ? pay_mechanic.toString() : '0'}
+                                value = {pay_mechanic ? pay_mechanic.toString() : ""}
                                 onChangeText = {(e) => formatRupiah(e,'Rp. ',setPay_Mechanic)}
+                                onFocus = {() => setPay_Mechanic("")}
                             />
                 
-                        <TouchableOpacity style = {styles.button_reset_pay_mechanic} onPress = {() => setPay_Mechanic('0')}>
+                        <TouchableOpacity style = {styles.button_reset_pay_mechanic} onPress = {() => setPay_Mechanic("")}>
                             <Icon name = "undo" style = {{fontSize : 20}} />
                         </TouchableOpacity>
                         </View>
@@ -218,7 +240,7 @@ const InvoiceDetail = ({navigation}) => {
                     </View>
 
                     <View style = {{flex : 1}}>
-                        <TouchableOpacity style = {styles.button_complete} onPress = {() => handleComplete(bk,mechanic,data_Product,total,date_order,work_list,invoice_id,navigation)}>
+                        <TouchableOpacity style = {styles.button_complete} onPress = {() => handleComplete(user_Id,bk,mechanic,data_Product,total,date_order,work_list,invoice_id,navigation,setLoading)}>
                             <Text style = {{textAlign : 'center'}}>Selesai</Text>
                         </TouchableOpacity>
                     </View>

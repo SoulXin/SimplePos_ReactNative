@@ -2,6 +2,7 @@ const Motorcycle = require('../Models/motorcycle')
 
 exports.add_motorcycle = (req,res) => {
     Motorcycle.create({
+        user_id : req.body.user_id,
         name : req.body.name,
         category : req.body.category,
         year : Number(req.body.year)
@@ -15,7 +16,11 @@ exports.add_motorcycle = (req,res) => {
 }
 
 exports.show_motorcycle = (req,res) => {
-    Motorcycle.find({})
+    var user_id = req.params.user_id;
+
+    Motorcycle.find({
+        user_id : user_id
+    })
     .then(response => {
         res.json(response)
     })
@@ -52,8 +57,12 @@ exports.delete_motorcycle = (req,res) => {
 
 exports.filter_motorcycle = (req,res) => {
     var type = req.params.type;
+    var user_id = req.params.user_id;
+
     if(type === "All"){
-        Motorcycle.find({})
+        Motorcycle.find({
+            user_id : user_id
+        })
         .then(response => {
             res.json(response)
         })
@@ -62,6 +71,7 @@ exports.filter_motorcycle = (req,res) => {
         })    
     }else{
         Motorcycle.find({
+            user_id : user_id,
             category : type
         })
         .then(response => {

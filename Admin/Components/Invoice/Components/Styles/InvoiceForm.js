@@ -127,13 +127,17 @@ const styles = StyleSheet.create({
         margin : 10,
         borderRadius : 10
     },
-    table_child_row : {
+    table_child_row_1 : {
         flexDirection : 'row',
         alignItems : 'center',
-        margin : 5,
         padding : 10,
-        borderRadius : 5,
-        borderWidth : 1
+        backgroundColor : '#61c0bf'
+    },
+    table_child_row_2 : {
+        flexDirection : 'row',
+        alignItems : 'center',
+        padding : 10,
+        backgroundColor : '#bbded6'
     },
     button_delete_product : {
         backgroundColor : '#ffb6b9',

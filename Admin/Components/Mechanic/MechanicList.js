@@ -10,8 +10,10 @@ import {
     handleDelete
  } from './Components/Functions/MechanicList'
 import styles from './Components/Styles/MechanicList'
+import { checkUserSignedIn, clear_AsyncStorage } from '../../Global_Functions/Functions'
+import Loading from '../Modal_Loading/Loading'
 
-const MechanicList = () => {
+const MechanicList = ({navigation}) => {
     const [data,setData] = useState([]);
     const [temp_detail,setTemp_Detail] = useState('');
     const [showModalDetail,setShowModalDetail] = useState(false);
@@ -22,24 +24,36 @@ const MechanicList = () => {
     const [address,setAddress] = useState('');
     const [districts,setDistricts] = useState('');
     const [phone_number,setPhone_Number] = useState('');
+    const [loading,setLoading] = useState(false);
 
     useFocusEffect(useCallback(() => {
+        setLoading(true);
         const source = axios.CancelToken.source();
-        const loadData = async () => {
-            try{
-                const response = await axios.get("http://192.168.43.171:5000/employee/show_employee",{cancelToken : source.token});
-                setData(response.data);
-            }catch (error) {
-                if(axios.isCancel(error)){
-                    console.log("Response has been cancel TableList")
-                }else{
-                    throw error
+        checkUserSignedIn(navigation)
+        .then(res => {
+            const loadData = async () => {
+                try{
+                    const response = await axios.get(`http://192.168.43.171:5000/employee/show_employee/${res.user._id}`,{cancelToken : source.token});
+                    setData(response.data);
+                    setLoading(false);
+                }catch (error) {
+                    setLoading(false);
+                    if(axios.isCancel(error)){
+                        console.log("Response has been cancel TableList")
+                    }else{
+                        Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
+                    }
                 }
-            }
-        };
-        loadData();
+            };
+            loadData();
+        })
+        .catch(err => {
+            setLoading(false);
+            clear_AsyncStorage(navigation);
+        })
         return () => {
             source.cancel();
+            setData([]);
         }
     },[]));
 
@@ -64,6 +78,7 @@ const MechanicList = () => {
 
     return (
         <View style = {{flex : 1,margin : 10}}>
+            <Loading loading = {loading}/>
             {/* Modal Detail */}
             <Modal visible = {showModalDetail}>
                 <View style = {styles.container_modal}>
@@ -212,11 +227,11 @@ const MechanicList = () => {
 
                     <View style = {styles.row_bottom}>
                         <View style = {{width : '100%',flexDirection : 'row'}}>
-                            <TouchableOpacity style = {styles.button_cancel} onPress = {() => handleDelete(temp_detail,data,setData,setShowModalEdit)}>
+                            <TouchableOpacity style = {styles.button_cancel} onPress = {() => handleDelete(temp_detail,data,setData,setShowModalEdit,setLoading)}>
                                 <Text style = {{textAlign : 'center'}}>Hapus Mekanik</Text>
                             </TouchableOpacity>
 
-                            <TouchableOpacity style = {styles.button_save} onPress = {() => handleUpdate(temp_detail,name,age,religion,address,districts,phone_number,setShowModalEdit,setName,setAge,setReligion,setAddress,setDistricts,setPhone_Number)}>
+                            <TouchableOpacity style = {styles.button_save} onPress = {() => handleUpdate(temp_detail,name,age,religion,address,districts,phone_number,setShowModalEdit,setName,setAge,setReligion,setAddress,setDistricts,setPhone_Number,setLoading)}>
                                 <Text style = {{textAlign : 'center'}}>Simpan</Text>
                             </TouchableOpacity>
                         </View>

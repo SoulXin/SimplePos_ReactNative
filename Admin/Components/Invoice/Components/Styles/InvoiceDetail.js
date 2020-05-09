@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
         width : '100%'
     },
     button_add_product : {
-        backgroundColor : '#61c0bf',
+        backgroundColor : '#bbded6',
         padding : 10,
         margin : 10,
         borderRadius : 10,
@@ -114,13 +114,17 @@ const styles = StyleSheet.create({
         margin : 10,
         borderRadius : 10
     },
-    row_child : {
+    row_child_1 : {
         flexDirection : 'row',
         alignItems : 'center',
-        margin : 5,
         padding : 10,
-        borderRadius : 5,
-        borderWidth : 1
+        backgroundColor : '#61c0bf'
+    },
+    row_child_2 : {
+        flexDirection : 'row',
+        alignItems : 'center',
+        padding : 10,
+        backgroundColor : '#bbded6'
     },
     button_delete_product : {
         backgroundColor : '#ffb6b9',

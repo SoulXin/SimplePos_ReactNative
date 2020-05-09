@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { removeFormatMoney,formatMoney } from '../../../Global_Functions/Functions'
+import {Alert} from 'react-native'
 
 const handleCloseModalQty = (setShowModalQty,setQty) => {
     setShowModalQty(false);
@@ -23,7 +24,7 @@ const handleOpenModalQty = (dataContext,item,setShowModalQty,setPay_Mechanic,set
             });
         })
         .catch(error => {
-            console.log(error)
+            Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
         })
     }else{
         dataContext.temp_data_invoice.filter(list => {
@@ -83,7 +84,7 @@ const handleBack = (dataContext,dispatch,navigation) => {
     }
 }
 
-const handleAdd = (temp_add,qty,pay_mechanic,dataContext,dispatch,setShowModalQty,setQty) => {
+const handleAdd = async (temp_add,qty,pay_mechanic,dataContext,dispatch,setShowModalQty,setQty) => {
     setShowModalQty(false);
     const data = {
         id : temp_add._id,
@@ -95,21 +96,18 @@ const handleAdd = (temp_add,qty,pay_mechanic,dataContext,dispatch,setShowModalQt
         product_qty : temp_add.qty
     }
     if(dataContext.invoice_detail.invoice_id){
-        axios({
-            method : 'GET',
-            url : `http://192.168.43.171:5000/invoice/detail_invoice/${dataContext.invoice_detail.invoice_id}`
-        })
-        .then(response => {
-            let temp_dataContext =  response.data.product.filter((list,index) => {
+        try{
+            const detail_invoice = await axios.get(`http://192.168.43.171:5000/invoice/detail_invoice/${dataContext.invoice_detail.invoice_id}`);
+            let temp_dataContext = await detail_invoice.data.product.filter((list,index) => {
                 return list.id !== data.id
             });
-            const filter_data = response.data.product.filter(list => {
+            const filter_data = await detail_invoice.data.product.filter(list => {
                 if(list.id.includes(data.id)){
                     return true
                 }
                 return false
-            });
-
+            })
+            
             if(filter_data.length){
                 const temp_filter_data = {
                     id : filter_data[0].id,
@@ -126,19 +124,9 @@ const handleAdd = (temp_add,qty,pay_mechanic,dataContext,dispatch,setShowModalQt
                     worker : dataContext.invoice_detail.worker,
                     product : temp_dataContext,
                 }
- 
-                axios({
-                    method : 'PUT',
-                    url : `http://192.168.43.171:5000/invoice/update_invoice/${dataContext.invoice_detail.invoice_id}`,
-                    data : data_already  
-                })
-                .then(response => {
-                    setQty(1);
-                    temp_dataContext = [];
-                })  
-                .catch(error => {
-                    console.log(error);
-                })
+    
+                await axios.put(`http://192.168.43.171:5000/invoice/update_invoice/${dataContext.invoice_detail.invoice_id}`,data_already);
+                return setQty(1) , temp_dataContext = [];
             }else{
                 temp_dataContext.push(data);
                 const new_data = {
@@ -146,27 +134,15 @@ const handleAdd = (temp_add,qty,pay_mechanic,dataContext,dispatch,setShowModalQt
                     worker : dataContext.invoice_detail.worker,
                     product : temp_dataContext,
                 }
-
-                axios({
-                    method : 'PUT',
-                    url : `http://192.168.43.171:5000/invoice/update_invoice/${dataContext.invoice_detail.invoice_id}`,
-                    data : new_data  
-                })
-                .then(response => {
-                    temp_dataContext = [];
-                    setQty(1);
-                })
-                .catch(error => {
-                    console.log(error);
-                })
+    
+                await axios.put(`http://192.168.43.171:5000/invoice/update_invoice/${dataContext.invoice_detail.invoice_id}`,new_data);
+                return setQty(1),temp_dataContext = [];
             }
-        })
-        .catch(error => {
-            console.log(error)
-        })
-
+        }catch(error){
+            Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
+        }
     }else{
-        const filter_data =  dataContext.temp_data_invoice.filter(list => {
+        const filter_data = dataContext.temp_data_invoice.filter(list => {
             if(list.id.includes(data.id)){
                 return true
             }
@@ -175,8 +151,8 @@ const handleAdd = (temp_add,qty,pay_mechanic,dataContext,dispatch,setShowModalQt
 
         if(filter_data.length){
             setQty(1);
-            const filter = dataContext.temp_data_invoice.filter(list => list.id === data.id);
-            const temp_data_filter = dataContext.temp_data_invoice.filter(list => list.id !== data.id);
+            const filter = await dataContext.temp_data_invoice.filter(list => list.id === data.id);
+            const temp_data_filter = await dataContext.temp_data_invoice.filter(list => list.id !== data.id);
             const data_filter = {
                 id : filter[0].id,
                 product_name : filter[0].product_name,

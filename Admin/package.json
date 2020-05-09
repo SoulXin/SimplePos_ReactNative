@@ -2,6 +2,10 @@
   "name": "Admin",
   "version": "0.0.1",
   "private": true,
+  "engines": {
+    "node": "13.10.1",
+    "npm": "6.13.7"
+  },
   "scripts": {
     "android": "react-native run-android",
     "ios": "react-native run-ios",

@@ -16,11 +16,12 @@ import {
 import axios from 'axios'
 import Icon from 'react-native-vector-icons/FontAwesome5';
 import styles from './Components/Styles'
-import {formatRupiah,formatMoney} from '../../Global_Functions/Functions'
+import {formatRupiah,formatMoney, checkUserSignedIn,clear_AsyncStorage} from '../../Global_Functions/Functions'
+import Loading from '../Modal_Loading/Loading'
 
 const Home = ({navigation}) => {
     const {dataContext,dispatch} = useContext(Context);
-
+    
     // Data
     const [data,setData] = useState([]);
     const [tempData,setTempData] = useState([]);
@@ -46,23 +47,36 @@ const Home = ({navigation}) => {
     const [showModalQty,setShowModalQty] = useState(false);
 
     useFocusEffect(useCallback(() => {
+        setLoading(true);
         const source = axios.CancelToken.source();
-        const loadData = async () => {
-            try{
-                const response = await axios.get("http://192.168.43.171:5000/product/show_product",{cancelToken : source.token});
-                setData(response.data);
-                setfullData(response.data);
-                setReloadData(response.data);
-            }catch (error) {
-                if(axios.isCancel(error)){
-                    console.log("Response has been cancel TableList")
-                }else{
-                    throw error
+        checkUserSignedIn(navigation)
+        .then(res => {
+            const loadData = async () => {
+                try{
+                    const response = await axios.get(`http://192.168.43.171:5000/product/show_product/${res.user._id}`,{cancelToken : source.token});
+                    setData(response.data);
+                    setfullData(response.data);
+                    setReloadData(response.data);
+                    setLoading(false);
+                }catch (error) {
+                    setLoading(false);
+                    if(axios.isCancel(error)){
+                        console.log("Response has been cancel TableList")
+                    }else{
+                        Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
+                    }
                 }
-            }
-        };
-        loadData();
+            };
+            loadData();
+        })
+        .catch(err => {
+            setLoading(false);
+            clear_AsyncStorage(navigation);
+        })
         return () => {
+            setData([]);
+            setfullData([]);
+            setReloadData([]);
             dispatch({type : 'CHANGE_VIEW',data : 'home'});
             source.cancel();
         }
@@ -70,7 +84,7 @@ const Home = ({navigation}) => {
     
     const _renderItem = ({item,index }) => {
         return (
-            <ListItem avatar key = {index} key = {index}>
+            <ListItem avatar key = {index}>
                 <Body>
                     <Text>{item.product_name}</Text>
                     <Text note>Modal :  Rp.{formatMoney(item.product_capital)}</Text>
@@ -88,17 +102,6 @@ const Home = ({navigation}) => {
                     }
                 </Right>
             </ListItem>
-        )
-    }
-
-    const renderFooter = () => {
-        if(!loading){
-            return null 
-        }
-        return (
-            <View style = {{paddingVertical :20,borderTopWidth : 1,borderColor : 'black'}}>
-                <ActivityIndicator animating size = "large"/>
-            </View>
         )
     }
 
@@ -213,6 +216,7 @@ const Home = ({navigation}) => {
 
     return (
         <Container>
+            <Loading loading = {loading}/>
             <Modal visible = {showModalQty} transparent>
                 <View style = {styles.container_add_new_product}>
                     <View style = {styles.container_box_add_new_product}>
@@ -239,10 +243,11 @@ const Home = ({navigation}) => {
                         <View style = {styles.row}>
                             <TextInput
                                 style = {styles.input_pay_mechanic}
-                                value = {pay_mechanic ? pay_mechanic.toString() : "0"}
+                                value = {pay_mechanic ? pay_mechanic.toString() : ""}
                                 onChangeText = {(e) => formatRupiah(e,'Rp. ',setPay_Mechanic)}
+                                onFocus = {() => setPay_Mechanic("")}
                             />
-                            <TouchableOpacity style = {styles.button_reset_pay_mechanic} onPress = {() => setPay_Mechanic('0')}>
+                            <TouchableOpacity style = {styles.button_reset_pay_mechanic} onPress = {() => setPay_Mechanic("")}>
                                 <Icon name = "undo" style = {styles.button_text_reset} />
                             </TouchableOpacity>
                         </View>
@@ -267,7 +272,6 @@ const Home = ({navigation}) => {
                     data = {data}
                     renderItem = {_renderItem}
                     keyExtractor = {(item,index) => index.toString()}
-                    ListFooterComponent = {renderFooter}
                 />
             </SafeAreaView>
             {

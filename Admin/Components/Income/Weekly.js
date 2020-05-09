@@ -3,31 +3,44 @@ import { View, FlatList,Modal,TouchableOpacity,ScrollView } from 'react-native'
 import { useFocusEffect } from 'react-navigation-hooks'
 import {  Button, ListItem, Body, Right, Text } from 'native-base';
 import axios from 'axios'
-import {formatMoney,date} from '../../Global_Functions/Functions'
+import {formatMoney,date, checkUserSignedIn, clear_AsyncStorage} from '../../Global_Functions/Functions'
 import styles from './Components/Styles/Daily'
+import Loading from '../Modal_Loading/Loading'
 
-const Weekly = () => {
+const Weekly = ({navigation}) => {
     const [data,setData] = useState([]);
     const [show_Modal_Detail,setShow_Modal_Detail] = useState(false);
     const [temp_Detail,setTemp_Detail] = useState('');
-    
+    const [loading,setLoading] = useState(false);
+
     useFocusEffect(useCallback(() => {
+        setLoading(true);
         const source = axios.CancelToken.source();
-        const loadData = async () => {
-            try{
-                const response = await axios.get("http://192.168.43.171:5000/income/show_income/weekly",{cancelToken : source.token});
-                setData(response.data);
-            }catch (error) {
-                if(axios.isCancel(error)){
-                    console.log("Response has been cancel TableList")
-                }else{
-                    throw error
+        checkUserSignedIn(navigation)
+        .then(res => {
+            const loadData = async () => {
+                try{
+                    const response = await axios.get(`http://192.168.43.171:5000/income/show_income/weekly/${res.user._id}`,{cancelToken : source.token});
+                    setData(response.data);
+                    setLoading(false);
+                }catch (error) {
+                    setLoading(false);
+                    if(axios.isCancel(error)){
+                        console.log("Response has been cancel TableList")
+                    }else{
+                        Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
+                    }
                 }
-            }
-        };
-        loadData();
+            };
+            loadData();
+        })
+        .catch(err => {
+            setLoading(false);
+            clear_AsyncStorage(navigation);
+        })
         return () => {
             source.cancel();
+            setData([]);
         }
     },[]));
     
@@ -99,6 +112,7 @@ const Weekly = () => {
 
     return (
         <View style = {styles.container}>
+            <Loading loading = {loading}/>
             <Modal visible = {show_Modal_Detail}>
                 <View style = {styles.container}>
                     <View style = {styles.table_header}>

@@ -40,8 +40,10 @@ const handleUpdate = (
     setReligion,
     setAddress,
     setDistricts,
-    setPhone_Number
+    setPhone_Number,
+    setLoading
 ) => {
+    setLoading(true);
     const data = {
         name : name ? name : temp_detail.name,
         age : age ? parseInt(age) : parseInt(temp_detail.age),
@@ -57,7 +59,7 @@ const handleUpdate = (
         data : data
     })
     .then(response => {
-        console.log(response.data)
+        setLoading(false);
         setShowModalEdit(false);
         setName('');
         setAge('');
@@ -67,11 +69,13 @@ const handleUpdate = (
         setPhone_Number('');
     })
     .catch(error => {
-        console.log(error)
+        setLoading(false);
+        Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
     })
 }
 
-const handleDelete = (temp_detail,data,setData,setShowModalEdit) => {
+const handleDelete = (temp_detail,data,setData,setShowModalEdit,setLoading) => {
+    setLoading(true);
     axios({
         method : 'DELETE',
         url : `http://192.168.43.171:5000/employee/delete_employee/${temp_detail._id}`
@@ -79,10 +83,12 @@ const handleDelete = (temp_detail,data,setData,setShowModalEdit) => {
     .then(response => {
         const filter = data.filter(list => list._id !== temp_detail._id);
         setData(filter);
+        setLoading(false);
         setShowModalEdit(false);
     })
     .catch(error => {
-        console.log(error)
+        setLoading(false);
+        Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
     })
 }
 

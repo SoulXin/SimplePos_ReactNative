@@ -1,7 +1,7 @@
 import {createStackNavigator} from 'react-navigation-stack'
-import MotorcycleList  from '../Components/Type/MotorcycleList'
-import MotorcycleForm from '../Components/Type/MotorcycleForm'
-import MotorcycleDetail from '../Components/Type/MotorcycleDetail'
+import MotorcycleList  from '../../Components/Type/MotorcycleList'
+import MotorcycleForm from '../../Components/Type/MotorcycleForm'
+import MotorcycleDetail from '../../Components/Type/MotorcycleDetail'
 
 const screens = {
     MotorcycleList : {

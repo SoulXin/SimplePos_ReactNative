@@ -19,7 +19,8 @@ const handleRemoveSelectionType = (id,list,selectionType,tempSelectionType,setTy
     setTempSelectionType(temp_Selection);
 }
 
-const handleUpdate = (id,name,capital,price,tempSelectionType,qty,Alert,navigation) => {
+const handleUpdate = (id,name,capital,price,tempSelectionType,qty,Alert,navigation,setLoading) => {
+    setLoading(true);
     const data = {
         product_name : name,
         product_capital : removeFormatMoney(capital),
@@ -28,12 +29,16 @@ const handleUpdate = (id,name,capital,price,tempSelectionType,qty,Alert,navigati
         qty : parseInt(qty)
     };
     if(name.length < 4){
+        setLoading(false);
         Alert.alert('Pemberitahuan','Nama Produk Harus Lebih Dari 3 Kata',[{text: 'OK'}]);
     }else if(removeFormatMoney(capital) > removeFormatMoney(price)){
+        setLoading(false);
         Alert.alert('Pemberitahuan','Modal Tidak Boleh Lebih Besar Dari Harga Jual',[{text: 'OK'}]);
     }else if(capital < 1){
+        setLoading(false);
         Alert.alert('Pemberitahuan','Modal Tidak Boleh 0',[{text: 'OK'}]);
     }else if(tempSelectionType.length < 1){
+        setLoading(false);
         Alert.alert('Pemberitahuan','Jumlah Tipe Kereta Tidak Boleh Kosong',[{text: 'OK'}]);
     }else{
         axios({
@@ -42,24 +47,29 @@ const handleUpdate = (id,name,capital,price,tempSelectionType,qty,Alert,navigati
             data : data
         })
         .then(response => {
+            setLoading(false);
             Alert.alert('Berhasil','Pembaharuan Data Telah Berhasil',[{text: 'OK', onPress: () => navigation.navigate('ProductList')}]);
         })
         .catch(error => {
-            console.log(error)
+            setLoading(false);
+            Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
         })
     }
 }
 
-const handleDelete = (id,Alert,navigation) => {
+const handleDelete = (id,Alert,navigation,setLoading) => {
+    setLoading(true);
     axios({
         method : 'DELETE',
         url : `http://192.168.43.171:5000/product/delete_product/${id}`
     })
     .then(response => {
+        setLoading(false);
         Alert.alert('Pemberitahuan','Produk Berhasil Di Hapus',[{text : 'OK', onPress : () => navigation.navigate('ProductList')}])
     })
     .catch(error => {
-        console.log(error)
+        setLoading(false);
+        Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
     })
 }
 

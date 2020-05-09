@@ -11,8 +11,9 @@ import {
     handleSelectedFilterType,
     handleCloseModalShow
 } from './Components/Functions/ProductDetail'
-import {formatRupiah} from '../../Global_Functions/Functions'
+import {formatRupiah, checkUserSignedIn, clear_AsyncStorage} from '../../Global_Functions/Functions'
 import styles from './Components/Styles/ProductDetail'
+import Loading from '../Modal_Loading/Loading'
 
 const ProductDetail = ({navigation}) => {
     const [id,setId] = useState('');
@@ -34,8 +35,10 @@ const ProductDetail = ({navigation}) => {
     const [modalShow,setModalShow] = useState(false);
     const [filterType,setFilterType] = useState('');
     const [selectionFilterType,setSelectionFilterType] = useState('');
+    const [loading,setLoading] = useState(false);
 
     useFocusEffect(useCallback(() => {
+        setLoading(true);
         setId(navigation.state.params._id);
         setName(navigation.state.params.product_name);
         // Capital
@@ -46,39 +49,48 @@ const ProductDetail = ({navigation}) => {
         setSelectionType(navigation.state.params.product_type);
 
         const source = axios.CancelToken.source();
-        const loadData = async () => {
-            try{
-                const response = await axios.get("http://192.168.43.171:5000/motorcycle/show_motorcycle",{cancelToken : source.token});
-                var uniqueResultOne = response.data.filter(function(obj) {
-                    return !navigation.state.params.product_type.some(function(obj2) {
-                        return obj._id == obj2._id;
+        checkUserSignedIn(navigation)
+        .then(res => {
+            const loadData = async () => {
+                try{
+                    const response = await axios.get(`http://192.168.43.171:5000/motorcycle/show_motorcycle/${res.user._id}`,{cancelToken : source.token});
+                    var uniqueResultOne = response.data.filter(function(obj) {
+                        return !navigation.state.params.product_type.some(function(obj2) {
+                            return obj._id == obj2._id;
+                        });
                     });
-                });
-
-                //Find values that are in result2 but not in result1
-                var uniqueResultTwo = navigation.state.params.product_type.filter(function(obj) {
-                    return !response.data.some(function(obj2) {
-                        return obj._id == obj2._id;
+    
+                    //Find values that are in result2 but not in result1
+                    var uniqueResultTwo = navigation.state.params.product_type.filter(function(obj) {
+                        return !response.data.some(function(obj2) {
+                            return obj._id == obj2._id;
+                        });
                     });
-                });
-
-                //Combine the two arrays of unique entries
-                var result = uniqueResultOne.concat(uniqueResultTwo);
-                setType(result);
-                setTempType(result);
-
-                const response_selection_type = await axios.get(`http://192.168.43.171:5000/product/detail_product/${navigation.state.params._id}`,{cancelToken : source.token});
-                setSelectionType(response_selection_type.data.product_type);
-                setTempSelectionType(response_selection_type.data.product_type);
-            }catch (error) {
-                if(axios.isCancel(error)){
-                    console.log("Response has been cancel TableList")
-                }else{
-                    throw error
+    
+                    //Combine the two arrays of unique entries
+                    var result = uniqueResultOne.concat(uniqueResultTwo);
+                    setType(result);
+                    setTempType(result);
+    
+                    const response_selection_type = await axios.get(`http://192.168.43.171:5000/product/detail_product/${navigation.state.params._id}`,{cancelToken : source.token});
+                    setSelectionType(response_selection_type.data.product_type);
+                    setTempSelectionType(response_selection_type.data.product_type);
+                    setLoading(false);
+                }catch (error) {
+                    setLoading(false);
+                    if(axios.isCancel(error)){
+                        console.log("Response has been cancel TableList")
+                    }else{
+                        Alert.alert('Pemberitahuan','Terjadi Masalah Pada Server,Silakan Hubungi Admin',[{text : 'OK'}]);
+                    }
                 }
-            }
-        };
-        loadData();
+            };
+            loadData();
+        })
+        .catch(err => {
+            setLoading(false);
+            clear_AsyncStorage(navigation);
+        })
     
         return () => {
             source.cancel();
@@ -123,6 +135,7 @@ const ProductDetail = ({navigation}) => {
 
     return (
         <View style = {styles.container}>
+            <Loading loading = {loading}/>
             <Modal visible = {modalShow}>
                 <View style = {styles.container_modal}>
                     <View style = {styles.first_cell}>
@@ -238,11 +251,11 @@ const ProductDetail = ({navigation}) => {
 
             <View style = {styles.container_button}>
                 <View style = {styles.row}>
-                    <TouchableOpacity  style = {styles.button_delete} onPress = {() => handleDelete(id,Alert,navigation)}>
+                    <TouchableOpacity  style = {styles.button_delete} onPress = {() => handleDelete(id,Alert,navigation,setLoading)}>
                         <Text style = {styles.button_text}>Hapus Produk</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style = {styles.button_save} onPress = {() => handleUpdate(id,name,capital,price,tempSelectionType,qty,Alert,navigation)}>
+                    <TouchableOpacity style = {styles.button_save} onPress = {() => handleUpdate(id,name,capital,price,tempSelectionType,qty,Alert,navigation,setLoading)}>
                         <Text style = {styles.button_text}>Simpan Perubahan</Text>
                     </TouchableOpacity>
                 </View>

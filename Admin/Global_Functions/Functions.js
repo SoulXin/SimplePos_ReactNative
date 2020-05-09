@@ -1,4 +1,4 @@
-
+import {AsyncStorage} from 'react-native'
 /* Fungsi formatRupiah */
 const formatRupiah = (angka, prefix, set) => {
     var separator = '';
@@ -45,9 +45,38 @@ const date = (date_order) => {
 
     return day + " " + monthNow + " " + year
 }
+
+const checkUserSignedIn = async (navigation) =>{
+    try {
+       let value = await AsyncStorage.getItem('data_login');
+        if (value != null){
+            // do something
+            let value_parse = JSON.parse(value);
+            return value_parse
+        }else{
+            navigation.navigate('Login')
+        }
+    } catch (error) {
+      // Error retrieving data
+      console.log(error)
+    }
+}
+
+const clear_AsyncStorage = async (navigation) => {
+    try {
+        await AsyncStorage.removeItem('data_login');
+        return navigation.navigate('Login');
+    }
+    catch(exception) {
+        return false;
+    }
+}
+
 export {
     formatRupiah,
     removeFormatMoney,
     formatMoney,
-    date
+    date,
+    checkUserSignedIn,
+    clear_AsyncStorage
 }
